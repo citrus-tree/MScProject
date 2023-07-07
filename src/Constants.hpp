@@ -1,0 +1,4 @@
+#pragma once
+
+#define SHADOW_MAP_RESOLUTION 4096
+#define SHADOW_MAP_RESOLUTION_F 4096.0f

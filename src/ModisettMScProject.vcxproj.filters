@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="res">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\Renderer">
+      <UniqueIdentifier>{d089f2f8-8bbb-4249-a0dd-9ddd6d0c181e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Descriptor Set">
+      <UniqueIdentifier>{96b4cc82-d039-4822-96da-55e7eec4dbe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Environment">
+      <UniqueIdentifier>{f561f644-834a-43b3-b38e-2484b35130d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Environment\Init Strats">
+      <UniqueIdentifier>{c537d947-95c0-4ea8-9d5d-ef6c5c479d1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Viewer">
+      <UniqueIdentifier>{ed004bdc-a891-49c7-ba13-a351ed027f71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Viewer\Flying Camera">
+      <UniqueIdentifier>{a2f6153e-ac8a-41b7-ae22-c06bb9094b20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Misc">
+      <UniqueIdentifier>{12002aac-5a68-43a6-8536-a7d4c4f0155f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Model">
+      <UniqueIdentifier>{3f17fa43-9e28-47c1-bb55-4e7988ab7300}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Pipeline">
+      <UniqueIdentifier>{46525448-73d1-4666-b615-0e0d4f9c2ab7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Render Pass">
+      <UniqueIdentifier>{2ee260e5-1a93-49db-b5c3-ec7f5b5a0d48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Renderer\Utils">
+      <UniqueIdentifier>{e25d8ec9-9288-4acf-b858-0683d77db227}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorSet.cpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClCompile>
+    <ClCompile Include="DescriptorSetLayout.cpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClCompile>
+    <ClCompile Include="Env_Strat_FirstFrame_Init.cpp">
+      <Filter>src\Renderer\Environment\Init Strats</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment.cpp">
+      <Filter>src\Renderer\Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="FlyingCamera.cpp">
+      <Filter>src\Viewer\Flying Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Pipeline.cpp">
+      <Filter>src\Renderer\Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderPass.cpp">
+      <Filter>src\Renderer\Render Pass</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferUtilities.cpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="CreationUtilities.cpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureUtilities.cpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>src\Renderer\Model</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DescriptorSet.hpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorSetFeatures.hpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorSetLayout.hpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorSetLayoutFeatures.hpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClInclude>
+    <ClInclude Include="DescriptorSets.hpp">
+      <Filter>src\Renderer\Descriptor Set</Filter>
+    </ClInclude>
+    <ClInclude Include="Env_Strat_FirstFrame.hpp">
+      <Filter>src\Renderer\Environment\Init Strats</Filter>
+    </ClInclude>
+    <ClInclude Include="Env_Strat_FirstFrame_Base.hpp">
+      <Filter>src\Renderer\Environment\Init Strats</Filter>
+    </ClInclude>
+    <ClInclude Include="Env_Strat_FirstFrame_Init.h">
+      <Filter>src\Renderer\Environment\Init Strats</Filter>
+    </ClInclude>
+    <ClInclude Include="Env_Strat_FirstFrame_Null.hpp">
+      <Filter>src\Renderer\Environment\Init Strats</Filter>
+    </ClInclude>
+    <ClInclude Include="Environment.hpp">
+      <Filter>src\Renderer\Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="FlyingCamera.hpp">
+      <Filter>src\Viewer\Flying Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorCode.hpp">
+      <Filter>src\Renderer\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Uniforms.hpp">
+      <Filter>src\Renderer\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.hpp">
+      <Filter>src\Renderer\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="Pipeline.hpp">
+      <Filter>src\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="PipelineFeatures.hpp">
+      <Filter>src\Renderer\Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPass.hpp">
+      <Filter>src\Renderer\Render Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderPassFeatures.hpp">
+      <Filter>src\Renderer\Render Pass</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferUtilities.hpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CreationUtilities.hpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderingUtilities.hpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureUtilities.hpp">
+      <Filter>src\Renderer\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>src\Renderer\Model</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4e943215-7fbc-4a41-a544-8133b943e2e1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="glfw\src\internal.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\linux_joystick.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\mappings.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\null_joystick.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\null_platform.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\platform.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\win32_joystick.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\win32_platform.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\win32_thread.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glfw\src\win32_time.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="glfw\src\context.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\egl_context.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\glx_context.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\init.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\input.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\linux_joystick.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\monitor.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\null_init.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\null_joystick.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\null_monitor.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\null_window.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\platform.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\vulkan.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\wgl_context.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_init.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_joystick.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_module.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_monitor.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_thread.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_time.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\win32_window.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glfw\src\window.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
