@@ -15,6 +15,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ModisettMScProject", "src\M
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ext_glfw", "ext\ext_glfw.vcxproj", "{5BBBB63D-895D-422B-880C-AF9381C9E509}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4B0D283B-0715-4C09-8A38-66D7C6DD93E2} = {4B0D283B-0715-4C09-8A38-66D7C6DD93E2}
+		{797AAAFF-7F5A-4873-97AB-AC01FB822FC4} = {797AAAFF-7F5A-4873-97AB-AC01FB822FC4}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ext_glm", "ext\ext_glm.vcxproj", "{CDE2DA93-EC54-4B77-A8D5-E001CE6FA7E0}"
 EndProject

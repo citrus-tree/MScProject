@@ -10,15 +10,18 @@
 
 /* renderer */
 #include "DescriptorSets.hpp"
-
-/* tinygltf */
-#include "../ext/tinygltf/include/tiny_gltf.h"
+#include "Uniforms.hpp"
 
 namespace Renderer
 {
 	class DescriptorSetLayout;
 	class Environment;
 	class Pipeline;
+}
+
+namespace tinygltf
+{
+	class Model;
 }
 
 namespace Renderer
@@ -72,6 +75,10 @@ namespace Renderer
 			{
 				bool normalMapped = false;
 				bool alphaClipped = false;
+				bool alphaBlend = false;
+
+				Renderer::Uniforms::SimpleMaterial data;
+				lut::Buffer dataBuffer{};
 
 				DescriptorSet* descriptorSet{};
 			};
@@ -84,14 +91,19 @@ namespace Renderer
 
 				lut::Buffer indices{}; // uint32_t
 
-				uint32_t meshDataIndex = 0;
+				uint32_t indicesSize = 0;
 				DescriptorSet* descriptorSet{};
+
+				int materialIndex = -1;
 			};
 
 			std::vector<TextureData> _textureData{};
 			std::vector<MaterialData> _materialData{};
 			std::vector<MeshData> _meshes{};
-			tinygltf::Model _model{};
+
+			std::vector<int> _opaqueMeshes{};
+			std::vector<int> _transparentMeshes{};
+			tinygltf::Model* _model = nullptr;
 
 			/* private member functions */
 
@@ -104,7 +116,9 @@ namespace Renderer
 			public:
 			/* public member functions */
 
-			void CmdDrawComplex(Environment* environment, Pipeline* pipeline);
-			void CmdDrawComplex_DepthOnly(Environment* environment, Pipeline* pipeline);
+			void CmdDrawOpaque(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
+			void CmdDrawOpaque(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
+			void CmdDrawOpaque_DepthOnly(Environment* environment, Pipeline* pipeline);
+			void CmdDrawOpaque_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end);
 	};
 }

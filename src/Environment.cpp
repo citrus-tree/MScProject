@@ -289,10 +289,10 @@ namespace Renderer
 		createIntermediateBuffers();
 		_intermediateFramebuffers.clear();
 		createIntermediateFramebuffers(render_passes[0]);
-		_postProcessingFramebuffers.clear();
-		createPostProcessingFramebuffers(render_passes[1]);
+		// _postProcessingFramebuffers.clear();
+		// createPostProcessingFramebuffers(render_passes[1]);
 		_swapChainFramebuffers.clear();
-		createPresentationFramebuffers(render_passes[2]);
+		createPresentationFramebuffers(render_passes[1]);
 
 		_cmdBuffers.clear();
 		_cmdFences.clear();
@@ -331,10 +331,10 @@ namespace Renderer
 
 			_intermediateFramebuffers.clear();
 			createIntermediateFramebuffers(render_passes[0]);
-			_postProcessingFramebuffers.clear();
-			createPostProcessingFramebuffers(render_passes[1]);
+			// _postProcessingFramebuffers.clear();
+			// createPostProcessingFramebuffers(render_passes[1]);
 			_swapChainFramebuffers.clear();
-			createPresentationFramebuffers(render_passes[2]);
+			createPresentationFramebuffers(render_passes[1]);
 
 			ret = ErrorCode::FAILURE;
 			_swapState = SwapChainState::READY;

@@ -18,6 +18,13 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="tinygltf\include\json.hpp" />
+    <ClInclude Include="tinygltf\include\tiny_gltf.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="tinygltf\include\tiny_gltf.cc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

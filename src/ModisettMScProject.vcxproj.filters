@@ -42,6 +42,9 @@
     <Filter Include="src\Renderer\Utils">
       <UniqueIdentifier>{e25d8ec9-9288-4acf-b858-0683d77db227}</UniqueIdentifier>
     </Filter>
+    <Filter Include="res\shaders">
+      <UniqueIdentifier>{9127a4d6-6cce-486a-a9fc-77bff09f824b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -148,8 +151,16 @@
     <ClInclude Include="TextureUtilities.hpp">
       <Filter>src\Renderer\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
+    <ClInclude Include="Model.hpp">
       <Filter>src\Renderer\Model</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\shaders\default.frag">
+      <Filter>res\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\default.vert">
+      <Filter>res\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

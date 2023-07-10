@@ -4,10 +4,12 @@
 #include <vk_mem_alloc.h>
 
 #include <utility>
+#include <vector>
 
 #include <cassert>
 
 #include "allocator.hpp"
+
 
 namespace labutils
 {
@@ -35,7 +37,9 @@ namespace labutils
 	};
 
 
-	Image load_image_texture2d( char const* aPath, VulkanContext const&, VkCommandPool, Allocator const&, VkFormat format);
+	Image load_image_texture2d(char const* aPath, VulkanContext const&, VkCommandPool, Allocator const&, VkFormat format);
+
+	Image image_from_data_texture2d(std::vector<unsigned char> data, int width, int height, int bpp, VulkanContext const& aContext, VkCommandPool aCmdPool, Allocator const& aAllocator, VkFormat format);
 
 	Image create_image_texture2d( Allocator const&, std::uint32_t aWidth, std::uint32_t aHeight, VkFormat, VkImageUsageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT );
 

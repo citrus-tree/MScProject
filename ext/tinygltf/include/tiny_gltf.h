@@ -1,3 +1,10 @@
+#pragma warning(push)
+#pragma warning(disable : 4018)
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#pragma warning(push)
+#pragma warning(disable : 4101)
+
 //
 // Header-only tiny glTF 2.0 loader and serializer.
 //
@@ -8344,3 +8351,7 @@ bool TinyGLTF::WriteGltfSceneToFile(const Model *model,
 #endif
 
 #endif  // TINYGLTF_IMPLEMENTATION
+
+#pragma warning(pop)
+#pragma warning(pop)
+#pragma warning(pop)

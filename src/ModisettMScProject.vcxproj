@@ -48,7 +48,7 @@
     <ClInclude Include="Env_Strat_FirstFrame_Null.hpp" />
     <ClInclude Include="ErrorCode.hpp" />
     <ClInclude Include="FlyingCamera.hpp" />
-    <ClInclude Include="Model.h" />
+    <ClInclude Include="Model.hpp" />
     <ClInclude Include="Pipeline.hpp" />
     <ClInclude Include="PipelineFeatures.hpp" />
     <ClInclude Include="RenderingUtilities.hpp" />
@@ -56,6 +56,10 @@
     <ClInclude Include="RenderPassFeatures.hpp" />
     <ClInclude Include="TextureUtilities.hpp" />
     <ClInclude Include="Uniforms.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\shaders\default.frag" />
+    <None Include="..\res\shaders\default.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

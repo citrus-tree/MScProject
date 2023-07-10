@@ -63,14 +63,23 @@ namespace Renderer
 		{
 			union
 			{
-				float big[8] = { 1.0f, 1.0f, 1.0f, 0.7f, 0.0f, 0.0f, 0.0f, 0.0f };
+				float big[16] = {
+					1.0f, 1.0f, 1.0f, 1.0f,
+					0.0f, 0.0f, 0.0f,
+					0.0f,
+					0.7f,
+					0.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 0.0f, 0.0f
+					};
 
 				struct SimpleMaterialData
 				{
-					glm::vec3 abledo;
+					glm::vec4 abledo;
+					glm::vec3 emissive;
 					float roughness;
-					glm::vec3 normal;
 					float metallic;
+					glm::vec3 transmission;
+					float _padding[4];
 				} inner_data;
 
 			} data;
