@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window());
 
 	/* load model */
-	Renderer::Model model(&env, "../res/models/simple_cube.glb", &simpleLayout, &defaultSampler);
+	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
 
 	/* Pipelines and Dependencies */
 	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout };
