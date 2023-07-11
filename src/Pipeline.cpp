@@ -69,34 +69,33 @@ namespace Renderer
 
 		ShaderModule vert{};
 		ShaderModule frag{};
-		ShaderModule geom{};
 		std::vector<VkPipelineShaderStageCreateInfo> stagesInfo{};
 
 		if (_initData.specialMode == SpecialMode::NONE)
 		{
 			switch (_initData.fragmentMode)
 			{
-				case (FragmentMode::SIMPLE):
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "simple.frag.spv");
+				case (FragmentMode::OPAQUE):
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "default.frag.spv");
 					stagesInfo.resize(2);
 					break;
 
 				case (FragmentMode::ALPHA_CLIPPED):
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "alpha_clipped.frag.spv");
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "simple.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "alpha_clipped.frag.spv");
 					stagesInfo.resize(2);
 					break;
 
 				case (FragmentMode::NORMAL_MAPPED):
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "normal_mapped.frag.spv");
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "simple.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "normal_mapped.frag.spv");
 					stagesInfo.resize(2);
 					break;
 
 				case (FragmentMode::COMPLEX):
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "complex.frag.spv");
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "simple.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "complex.frag.spv");
 					stagesInfo.resize(2);
 					break;
 			}
@@ -106,35 +105,15 @@ namespace Renderer
 
 			switch (_initData.specialMode)
 			{
-				case SpecialMode::POST_PROC_TONE_MAPPING_REINHARD:
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "fullscreen.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "reinhard.frag.spv");
-					break;
-
-				case SpecialMode::POST_PROC_BLOOM_EXTRACT_HIGHLIGHTS:
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "fullscreen.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "bloom_extract_highlights.frag.spv");
-					break;
-
-				case SpecialMode::POST_PROC_BLOOM_HORIZONTAL:
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "fullscreen.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "bloom_horizontal.frag.spv");
-					break;
-
-				case SpecialMode::POST_PROC_BLOOM_VERTICAL:
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "fullscreen.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "bloom_vertical.frag.spv");
-					break;
-
 				case SpecialMode::SCREEN_QUAD_PRESENT:
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "fullscreen.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "post_present.frag.spv");
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "fullscreen.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "present_quad.frag.spv");
 					break;
 
 				case SpecialMode::SHADOW_MAP:
 				default:
-					vert = load_shader_module(environment->Window(), "assets/cw4/shaders/" "shadowmap.vert.spv");
-					frag = load_shader_module(environment->Window(), "assets/cw4/shaders/" "shadowmap.frag.spv");
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "shadowmap.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "shadowmap.frag.spv");
 					break;
 			}
 
@@ -154,15 +133,6 @@ namespace Renderer
 		stagesInfo[1].module = *frag;
 		stagesInfo[1].pName = "main";
 
-		if (false)
-		{
-			/* Geometry Shader */
-			stagesInfo[2].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			stagesInfo[2].stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-			stagesInfo[2].module = *geom;
-			stagesInfo[2].pName = "main";
-		}
-
 		/* Vertex input info */
 		std::vector<VkVertexInputBindingDescription> vertexInputs{};
 		std::vector <VkVertexInputAttributeDescription> vertexAttributes{};
@@ -171,7 +141,7 @@ namespace Renderer
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-		if (_initData.specialMode == SpecialMode::NONE || static_cast<uint32_t>(_initData.specialMode) > 5)
+		if (_initData.specialMode == SpecialMode::NONE || _initData.specialMode != SpecialMode::SCREEN_QUAD_PRESENT)
 		{
 			/* Vertex input info continued */
 
@@ -187,44 +157,29 @@ namespace Renderer
 			vertexAttributes[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 			vertexAttributes[0].offset = 0;
 
-			if (_initData.specialMode == SpecialMode::NONE)
-			{
-					/* UV input info */
-				vertexInputs.push_back({});
-				vertexInputs[1].binding = 1;
-				vertexInputs[1].stride = sizeof(float) * 2;
-				vertexInputs[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+				/* UV input info */
+			vertexInputs.push_back({});
+			vertexInputs[1].binding = 1;
+			vertexInputs[1].stride = sizeof(float) * 2;
+			vertexInputs[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-				vertexAttributes.push_back({});
-				vertexAttributes[1].binding = 1;
-				vertexAttributes[1].location = 1;
-				vertexAttributes[1].format = VK_FORMAT_R32G32_SFLOAT;
-				vertexAttributes[1].offset = 0;
+			vertexAttributes.push_back({});
+			vertexAttributes[1].binding = 1;
+			vertexAttributes[1].location = 1;
+			vertexAttributes[1].format = VK_FORMAT_R32G32_SFLOAT;
+			vertexAttributes[1].offset = 0;
 
-					/* Normals input info */
-				vertexInputs.push_back({});
-				vertexInputs[2].binding = 2;
-				vertexInputs[2].stride = sizeof(float) * 3;
-				vertexInputs[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+				/* Normals input info */
+			vertexInputs.push_back({});
+			vertexInputs[2].binding = 2;
+			vertexInputs[2].stride = sizeof(float) * 3;
+			vertexInputs[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-				vertexAttributes.push_back({});
-				vertexAttributes[2].binding = 2;
-				vertexAttributes[2].location = 2;
-				vertexAttributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-				vertexAttributes[2].offset = 0;
-
-					/* Tangents input info */
-				vertexInputs.push_back({});
-				vertexInputs[3].binding = 3;
-				vertexInputs[3].stride = sizeof(float) * 4;
-				vertexInputs[3].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-				vertexAttributes.push_back({});
-				vertexAttributes[3].binding = 3;
-				vertexAttributes[3].location = 3;
-				vertexAttributes[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-				vertexAttributes[3].offset = 0;
-			}
+			vertexAttributes.push_back({});
+			vertexAttributes[2].binding = 2;
+			vertexAttributes[2].location = 2;
+			vertexAttributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+			vertexAttributes[2].offset = 0;
 
 			/* Input state info continued */
 			vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputs.size());

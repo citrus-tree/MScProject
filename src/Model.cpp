@@ -215,6 +215,24 @@ namespace Renderer
 					static_cast<uint32_t>(bufferView.byteLength / accessor.count),
 					buffer.data.data() + bufferView.byteOffset);
 
+				/* upload indices data */
+				acc_index = primitive.indices;
+
+				accessor = _model->accessors[acc_index];
+				bufferView = _model->bufferViews[accessor.bufferView];
+				buffer = _model->buffers[bufferView.buffer];
+
+				CreateBuffer(
+					environment, &_meshes[offset].indices, static_cast<uint32_t>(accessor.count),
+					static_cast<uint32_t>(bufferView.byteLength / accessor.count),
+					buffer.data.data() + bufferView.byteOffset,
+					VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+
+				_meshes[offset].indicesSize = static_cast<uint32_t>(accessor.count);
+
+				/* assign material */
+				_meshes[offset].materialIndex = primitive.material;
+
 				/* increment the offset */
 				offset++;
 			}
@@ -261,7 +279,7 @@ namespace Renderer
 				_materialData[_meshes[_opaqueMeshes[i]].materialIndex].descriptorSet->CmdBind(environment, pipeline, 1);
 
 			vkCmdBindVertexBuffers(*environment->CurrentCmdBuffer(), 0, 3, buffers, offsets);
-			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT16);
 			vkCmdDrawIndexed(*environment->CurrentCmdBuffer(), cur_mesh.indicesSize, 1, 0, 0, 0);
 		}
 	}
@@ -281,7 +299,7 @@ namespace Renderer
 			VkDeviceSize offsets[2]{ 0, 0 };
 
 			vkCmdBindVertexBuffers(*environment->CurrentCmdBuffer(), 0, 2, buffers, offsets);
-			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT16);
 			vkCmdDrawIndexed(*environment->CurrentCmdBuffer(), cur_mesh.indicesSize, 1, 0, 0, 0);
 		}
 	}

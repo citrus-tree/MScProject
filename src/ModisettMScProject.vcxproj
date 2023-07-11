@@ -60,6 +60,8 @@
   <ItemGroup>
     <None Include="..\res\shaders\default.frag" />
     <None Include="..\res\shaders\default.vert" />
+    <None Include="..\res\shaders\fullscreen.vert" />
+    <None Include="..\res\shaders\present_quad.frag" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

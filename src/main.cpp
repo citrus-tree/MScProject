@@ -100,5 +100,92 @@ int main(int argc, char** argv)
 	/* load model */
 	Renderer::Model model(&env, "../res/models/simple_cube.glb", &simpleLayout, &defaultSampler);
 
+	/* Pipelines and Dependencies */
+	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout };
+	Renderer::Pipeline simplePipeline(&env, Renderer::Pipeline_Default, &simpleOpaquePass, simpleLayouts);
+
+	std::vector<const VkDescriptorSetLayout*> postProcessingLayouts = { &*singleTextureLayout };
+	Renderer::PipelineFeatures postPresentFeatures;
+	postPresentFeatures.alphaBlend = Renderer::AlphaBlend::DISABLED;
+	postPresentFeatures.fillMode = Renderer::FillMode::FILL;
+	postPresentFeatures.specialMode = Renderer::SpecialMode::SCREEN_QUAD_PRESENT;
+	Renderer::Pipeline postPresentPipeline(&env, postPresentFeatures, &presentPass, postProcessingLayouts);
+
+	/* Main loop */
+	double time = glfwGetTime();
+
+	while (glfwWindowShouldClose(env.Window().window) == false)
+	{
+		/* Window polling */
+		glfwPollEvents();
+
+		/* Recreate the swap chain if it's been invalidated.
+			This also necessitates adjusting the pipelines,
+			since the window has likely changed size. */
+		if (env.CheckSwapChain({ &simpleOpaquePass, &presentPass }) != ErrorCode::SUCCESS)
+		{
+			simplePipeline.Repair(&env);
+			postPresentPipeline.Repair(&env);
+
+			camera.UpdateCameraSettings(lut::Radians(90.0f).value(),
+				env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
+
+			continue;
+		}
+
+		/* Get the next swap chain image, etc. and wait for fences */
+		if (env.PrepareNextFrame() != ErrorCode::SUCCESS)
+			continue;
+
+		/* Update time and camera */
+		double now = glfwGetTime();
+		double timeDelta = now - time;
+		time = now;
+		camera.FrameUpdate(timeDelta);
+
+		/* Prepare to queue commands */
+		env.BeginFrameCommands();
+
+		/* Update the camera and lighting data uniforms */
+		Renderer::CmdUpdateBuffer(&env, &cameraUBO, 0, sizeof(Renderer::Uniforms::CameraData), camera.GetUniformDataPtr());
+
+		/* Begin geometry pass */
+		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
+
+		{
+			/* draw meshes */
+			simplePipeline.CmdBind(&env);
+			cameraSet.CmdBind(&env, &simplePipeline, 0);
+			model.CmdDrawOpaque(&env, &simplePipeline);
+		}
+
+		/* End render pass */
+		env.EndRenderPass();
+
+		/* Swap the intermediate images */
+		env.CmdSwapIntermediates(); /* 0 -> 1 */
+
+		/* Begin present pass */
+		env.BeginRenderPass(&presentPass); /* rendering to swap chain */
+
+		{
+			postPresentPipeline.CmdBind(&env);
+			env.CmdBindIntermediatePresentTexture(&postPresentPipeline, 0);
+			Renderer::CmdDrawFullscreenQuad(&env);
+		}
+
+		/* End render pass */
+		env.EndRenderPass();
+
+		/* Submitted queued commands */
+		env.EndFrameCommands();
+
+		/* Present the frame */
+		env.Present();
+	}
+
+	/* Wait for the GPU to finishing doing what it's doing. */
+	vkDeviceWaitIdle(env.Window().device);
+
 	return 0;
 }

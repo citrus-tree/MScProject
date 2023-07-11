@@ -18,7 +18,7 @@ namespace Renderer
 
 	enum class FragmentMode
 	{
-		SIMPLE = 0,
+		OPAQUE = 0,
 		ALPHA_CLIPPED,
 		NORMAL_MAPPED,
 		COMPLEX,
@@ -28,11 +28,7 @@ namespace Renderer
 	{
 		NONE = 0,
 		SCREEN_QUAD_PRESENT,
-		POST_PROC_TONE_MAPPING_REINHARD,
-		POST_PROC_BLOOM_EXTRACT_HIGHLIGHTS,
-		POST_PROC_BLOOM_HORIZONTAL,
-		POST_PROC_BLOOM_VERTICAL,
-		SHADOW_MAP = 6
+		SHADOW_MAP
 	};
 
 	struct PipelineFeatures
@@ -49,7 +45,7 @@ namespace Renderer
 	{
 		AlphaBlend::DISABLED,
 		FillMode::FILL,
-		FragmentMode::SIMPLE,
+		FragmentMode::OPAQUE,
 		SpecialMode::NONE,
 		{}
 	};
