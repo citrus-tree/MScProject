@@ -8,8 +8,6 @@ float pi = 3.141592;
 layout(location = 0) in vec3 iPosition;
 layout(location = 1) in vec2 iUV;
 layout(location = 2) in vec3 iNormal;
-layout(location = 3) in vec4 iTangent;
-layout(location = 4) in vec3 iBitangent;
 
 layout(location = 0) out vec4 oColour;
 
@@ -22,13 +20,68 @@ layout(set = 0, binding = 0) uniform CameraData
 } cameraData;
 
 layout(set = 1, binding = 0) uniform sampler2D uColourTex;
-layout(set = 1, binding = 1) uniform sampler2D uRoughnessTex;
-layout(set = 1, binding = 2) uniform sampler2D uMetallicTex;
+layout(set = 1, binding = 1) uniform sampler2D UMetallicRoughnessTex;
+
+layout(set = 1, binding = 2) uniform MaterialData
+{
+	vec4 abledo;
+	vec3 emissive;
+	float roughness;
+	vec3 transmission;
+	float metallic;
+	float _padding[4];
+} uMaterialData;
+
+struct DirectionalLight
+{
+	vec4 direction;
+	vec4 colour;
+};
+
+struct AmbientLight
+{
+	vec4 colour;
+};
+
+layout(set = 2, binding = 0) uniform LightData
+{
+	DirectionalLight sunLight;
+	AmbientLight ambientLight;
+} lightingData;
+
+/* Helper functions */
+
+float pos(float x)
+{
+	return max(0.0, x);
+}
+
+float posDot(vec3 left, vec3 right)
+{
+	float dot_val = dot(left, right);
+	return max(0.0, dot_val);
+}
+
+/* Lighting and Shading Calculations */
+
+vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metallic, float roughness, vec3 cameraPosition)
+{
+	vec3 to_cam = normalize(cameraPosition.rgb - position);
+	vec3 to_light = normalize(-lightingData.sunLight.direction.rgb);
+	vec3 half_vector = normalize(to_cam + to_light);
+
+	vec3 direct = lightingData.sunLight.colour.rgb * diffuse;
+	vec3 ambient = lightingData.ambientLight.colour.rgb * diffuse;
+	return ambient + (posDot(normal, to_light)) * direct;
+}
 
 /* main() */
 
 void main()
 {
-	vec4 diffuse = texture(uColourTex, iUV);
-	oColour = diffuse;
+	vec3 diffuse = texture(uColourTex, iUV).rgb;
+	float metallic = uMaterialData.metallic;// * texture(UMetallicRoughnessTex, iUV).r;
+	float roughness = uMaterialData.roughness;// * texture(UMetallicRoughnessTex, iUV).g;
+	vec3 lit = uMaterialData.emissive + LightingCalculation(iPosition, normalize(iNormal), diffuse, 0.0, 0.0, cameraData.position.rgb);
+	oColour = vec4(lit, 1.0);
 }

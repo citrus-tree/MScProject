@@ -1,4 +1,4 @@
-#include "FlyingCamera.hpp"
+#include "ViewerCamera.hpp"
 
 /* c */
 #include <cstdio>
@@ -18,18 +18,19 @@
 
 namespace Renderer
 {
-	FlyingCamera::FlyingCamera(Renderer::Environment* environment, float fov_radians,
+	ViewerCamera::ViewerCamera(Renderer::Environment* environment, float fov_radians,
 		float near_clip, float far_clip,
 		uint32_t frame_width, uint32_t frame_height)
 		: _epEnv(environment), _fov(fov_radians),
 			_nearClip(near_clip), _farClip(far_clip),
-			_frameWidth(frame_width), _frameHeight(frame_height)
+			_frameWidth(frame_width), _frameHeight(frame_height),
+			_aspect(static_cast<float>(frame_width) / static_cast<float>(frame_height))
 	{}
 
-	FlyingCamera::~FlyingCamera()
+	ViewerCamera::~ViewerCamera()
 	{}
 
-	void FlyingCamera::FrameUpdate(double delta_time)
+	void ViewerCamera::FrameUpdate(double delta_time)
 	{
 		/* not ideal, but optimisation will come in a later pass of the project
 			(if time permits). */
@@ -98,7 +99,7 @@ namespace Renderer
 		/* update data struct */
 		_data.projection = glm::perspectiveRH_ZO(
 			_fov,
-			static_cast<float>(_frameWidth) / _frameHeight,
+			_aspect,
 			_nearClip, _farClip);
 		_data.projection[1][1] = -1.0f;
 
@@ -108,46 +109,55 @@ namespace Renderer
 		_data.invProjView = glm::inverse(_data.projView);
 
 		_data.position = glm::vec4(_position, 1.0f);
+
+		_invView = glm::inverse(_data.view);
+
+		/* calculate forward, right, and up vectors */
+		_forward = glm::vec3(rotation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+		_right = glm::cross(_forward, glm::vec3(0.0f, 1.0f, 0.0f));
+		_up = glm::cross(_right, _forward);
 	}
 
-	void FlyingCamera::UpdateCameraSettings(float fov, uint32_t frame_width, uint32_t frame_height)
+	void ViewerCamera::UpdateCameraSettings(float fov, uint32_t frame_width, uint32_t frame_height)
 	{
 		_fov = fov;
 		_frameWidth = frame_width;
 		_frameHeight = frame_height;
+		_aspect = static_cast<float>(frame_width) / static_cast<float>(frame_height);
 	}
 
-	void FlyingCamera::SetPosition(glm::vec3 new_position)
+	void ViewerCamera::SetPosition(glm::vec3 new_position)
 	{
 		_position = new_position;
 	}
 
-	void FlyingCamera::SetOrientation(float x, float y)
+	void ViewerCamera::SetOrientation(float x, float y)
 	{
 		_xRotation = x;
 		_yRotation = y;
 	}
 
-	void FlyingCamera::SetOrientation(glm::vec2 rot_xy)
+	void ViewerCamera::SetOrientation(glm::vec2 rot_xy)
 	{
 		SetOrientation(rot_xy.x, rot_xy.y);
 	}
 
 	/* getters */
 
-	Uniforms::CameraData FlyingCamera::GetUniformData()
+	Uniforms::CameraData ViewerCamera::GetUniformData()
 	{
 		return _data;
 	}
-	Uniforms::CameraData* FlyingCamera::GetUniformDataPtr()
+	Uniforms::CameraData* ViewerCamera::GetUniformDataPtr()
 	{
 		return &_data;
 	}
-	glm::vec3 FlyingCamera::Position() const
+
+	const glm::vec3& ViewerCamera::Position() const
 	{
 		return _position;
 	}
-	glm::vec3 FlyingCamera::Direction() const
+	const glm::vec3 ViewerCamera::Direction() const
 	{
 		glm::mat4 rotation = glm::mat4(1);
 		rotation = glm::rotate(rotation, static_cast<float>(_xRotation * _mouseSensitivity), glm::vec3(1, 0, 0));
@@ -155,8 +165,45 @@ namespace Renderer
 
 		return normalize(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f) * rotation);
 	}
+	float ViewerCamera::FOVY() const
+	{
+		return _fov;
+	}
+	float ViewerCamera::NearDist() const
+	{
+		return _nearClip;
+	}
+	float ViewerCamera::FarDist() const
+	{
+		return _farClip;
+	}
 
-	void FlyingCamera::PrintPositionalData()
+	float ViewerCamera::Aspect() const
+	{
+		return _aspect;
+	}
+
+	const glm::vec3& ViewerCamera::Forward() const
+	{
+		return _forward;
+	}
+
+	const glm::vec3& ViewerCamera::Right() const
+	{
+		return _right;
+	}
+
+	const glm::vec3& ViewerCamera::Up() const
+	{
+		return _up;
+	}
+
+	const glm::mat4& ViewerCamera::InvView() const
+	{
+		return _invView;
+	}
+
+	void ViewerCamera::PrintPositionalData()
 	{
 		printf("POS: vec3(%.3f, %.3f, %.3f), ROT: vec2(%.3f, %.3f)\n",
 			_position.x, _position.y, _position.z,

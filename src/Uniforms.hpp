@@ -6,6 +6,11 @@
 
 namespace Renderer
 {
+	class ViewerCamera;
+}
+
+namespace Renderer
+{
 	namespace Uniforms
 	{
 		struct CameraData
@@ -32,30 +37,18 @@ namespace Renderer
 
 		struct LightData
 		{
-			struct PointLight
+			struct DirectionalLight
 			{
-				glm::vec4 position = glm::vec4(0.0f);
+				glm::vec4 direction = glm::vec4(0.0f);
 				glm::vec4 colour = glm::vec4(1.0f);
-				glm::vec4 attenuation = glm::vec4(512.0f, 0.8f, 0.12f, 0.09f); /* not strictly needed, but I like how it looks :) */
-			};
-
-			struct SpotLight
-			{
-				glm::vec4 position = glm::vec4(0.0f);
-				glm::vec4 colour = glm::vec4(1.0f);
-				glm::vec4 attenuation = glm::vec4(512.0f, 0.8f, 0.12f, 0.09f); /* not strictly needed, but I like how it looks :) */
-				glm::vec4 direction_halfangle = glm::vec4(0.0f, -1.0f, 0.0f, 0.7854f);
 			};
 
 			struct AmbientLight
 			{
-				glm::vec4 colour = glm::vec4(0.02f, 0.02f, 0.02f, 1.0f);
+				glm::vec4 colour = glm::vec4(0.05f, 0.05f, 0.05f, 1.0f);
 			};
 
-			PointLight pointLight;
-			SpotLight spotLight;
-			SpotLight spotLight1;
-			SpotLight spotLight2;
+			DirectionalLight sunLight;
 			AmbientLight ambientLight;
 		};
 
@@ -77,33 +70,32 @@ namespace Renderer
 					glm::vec4 abledo;
 					glm::vec3 emissive;
 					float roughness;
-					float metallic;
 					glm::vec3 transmission;
+					float metallic;
 					float _padding[4];
 				} inner_data;
 
 			} data;
 		};
 
-		struct SpotlightShadowData
+		struct DirectionalShadowData
 		{
 			glm::mat4 view = glm::mat4(1);
 			glm::mat4 projection = glm::mat4(1);
 			glm::mat4 projView = glm::mat4(1);
 
-			inline void Set(glm::mat4 invCamViewProj, LightData::SpotLight spotLight)
-			{
-				view = glm::lookAt(glm::vec3(spotLight.position),
-					glm::vec3(spotLight.position) - glm::vec3(spotLight.direction_halfangle),
-					glm::vec3(0.0f, 1.0f, 0.0f));
-				projection = glm::perspectiveRH_ZO(
-					spotLight.direction_halfangle[3],
-					1.0f,
-					0.1f, 1000.0f);
-				projection[1][1] = -1.0f;
+			private:
+				inline float rightTriangleOpposite(float angleRadians, float adjacentSide)
+				{
+					/* solves for the opposite side length of a right triangle given
+						a non-right angle measurement and its adjacent side's length */
 
-				projView = projection * view;
-			}
+					float h = adjacentSide / cosf(angleRadians);
+					return sqrtf(h * h - adjacentSide * adjacentSide);
+				}
+
+			public:
+				void Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, unsigned int bufferDistance = 1000.0f);
 		};
 	}
 }

@@ -24,9 +24,6 @@
     <Filter Include="src\Viewer">
       <UniqueIdentifier>{ed004bdc-a891-49c7-ba13-a351ed027f71}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\Viewer\Flying Camera">
-      <UniqueIdentifier>{a2f6153e-ac8a-41b7-ae22-c06bb9094b20}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\Renderer\Misc">
       <UniqueIdentifier>{12002aac-5a68-43a6-8536-a7d4c4f0155f}</UniqueIdentifier>
     </Filter>
@@ -45,6 +42,9 @@
     <Filter Include="res\shaders">
       <UniqueIdentifier>{9127a4d6-6cce-486a-a9fc-77bff09f824b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Viewer\Viewer Camera">
+      <UniqueIdentifier>{a2f6153e-ac8a-41b7-ae22-c06bb9094b20}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -62,8 +62,8 @@
     <ClCompile Include="Environment.cpp">
       <Filter>src\Renderer\Environment</Filter>
     </ClCompile>
-    <ClCompile Include="FlyingCamera.cpp">
-      <Filter>src\Viewer\Flying Camera</Filter>
+    <ClCompile Include="ViewerCamera.cpp">
+      <Filter>src\Viewer\Viewer Camera</Filter>
     </ClCompile>
     <ClCompile Include="Pipeline.cpp">
       <Filter>src\Renderer\Pipeline</Filter>
@@ -82,6 +82,9 @@
     </ClCompile>
     <ClCompile Include="Model.cpp">
       <Filter>src\Renderer\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Uniforms.cpp">
+      <Filter>src\Renderer\Misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -115,8 +118,8 @@
     <ClInclude Include="Environment.hpp">
       <Filter>src\Renderer\Environment</Filter>
     </ClInclude>
-    <ClInclude Include="FlyingCamera.hpp">
-      <Filter>src\Viewer\Flying Camera</Filter>
+    <ClInclude Include="ViewerCamera.hpp">
+      <Filter>src\Viewer\Viewer Camera</Filter>
     </ClInclude>
     <ClInclude Include="ErrorCode.hpp">
       <Filter>src\Renderer\Misc</Filter>

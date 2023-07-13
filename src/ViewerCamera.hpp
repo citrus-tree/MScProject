@@ -13,16 +13,16 @@ namespace Renderer
 
 namespace Renderer
 {
-	class FlyingCamera
+	class ViewerCamera
 	{
 		public:
 			/* constructors, etc. */
 
-			FlyingCamera(Renderer::Environment* environment, float fov_radians, float near_clip, float far_clip, uint32_t frame_width, uint32_t frame_height);
-			~FlyingCamera();
+			ViewerCamera(Renderer::Environment* environment, float fov_radians, float near_clip, float far_clip, uint32_t frame_width, uint32_t frame_height);
+			~ViewerCamera();
 
-			FlyingCamera(const FlyingCamera&) = delete;
-			FlyingCamera& operator=(const FlyingCamera&) = delete;
+			ViewerCamera(const ViewerCamera&) = delete;
+			ViewerCamera& operator=(const ViewerCamera&) = delete;
 
 		private:
 			/* private member variables */
@@ -34,8 +34,13 @@ namespace Renderer
 			float _farClip = 100.0f;
 			uint32_t _frameWidth = 0;
 			uint32_t _frameHeight = 0;
+			float _aspect = 0.0f;
 
 			glm::vec3 _position = glm::vec3(0);
+
+			glm::vec3 _forward = glm::vec3(0);
+			glm::vec3 _right = glm::vec3(0);
+			glm::vec3 _up = glm::vec3(0);
 
 			bool _mouseLook = false;
 			bool _pressedLastFrame = false;
@@ -44,6 +49,7 @@ namespace Renderer
 			float _yRotation = 0.0f, _xRotation = 0.0f;
 
 			Uniforms::CameraData _data{};
+			glm::mat4 _invView = glm::mat4(1);
 
 		public:
 			/* public member functions */
@@ -59,8 +65,18 @@ namespace Renderer
 			Uniforms::CameraData GetUniformData();
 			Uniforms::CameraData* GetUniformDataPtr();
 
-			glm::vec3 Position() const;
-			glm::vec3 Direction() const;
+			const glm::vec3& Position() const;
+			const glm::vec3 Direction() const;
+			float FOVY() const;
+			float NearDist() const;
+			float FarDist() const;
+			float Aspect() const;
+
+			const glm::vec3& Forward() const;
+			const glm::vec3& Right() const;
+			const glm::vec3& Up() const;
+
+			const glm::mat4& InvView() const;
 
 			void PrintPositionalData();
 	};

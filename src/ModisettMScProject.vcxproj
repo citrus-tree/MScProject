@@ -25,7 +25,8 @@
     <ClCompile Include="DescriptorSetLayout.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="Env_Strat_FirstFrame_Init.cpp" />
-    <ClCompile Include="FlyingCamera.cpp" />
+    <ClCompile Include="Uniforms.cpp" />
+    <ClCompile Include="ViewerCamera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Pipeline.cpp" />
@@ -47,7 +48,7 @@
     <ClInclude Include="Env_Strat_FirstFrame_Init.h" />
     <ClInclude Include="Env_Strat_FirstFrame_Null.hpp" />
     <ClInclude Include="ErrorCode.hpp" />
-    <ClInclude Include="FlyingCamera.hpp" />
+    <ClInclude Include="ViewerCamera.hpp" />
     <ClInclude Include="Model.hpp" />
     <ClInclude Include="Pipeline.hpp" />
     <ClInclude Include="PipelineFeatures.hpp" />

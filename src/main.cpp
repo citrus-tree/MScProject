@@ -28,12 +28,14 @@ namespace lut = labutils;
 #include "CreationUtilities.hpp"
 #include "DescriptorSets.hpp"
 #include "Environment.hpp"
-#include "FlyingCamera.hpp"
+#include "ViewerCamera.hpp"
 #include "Model.hpp"
 #include "Pipeline.hpp"
 #include "RenderingUtilities.hpp"
 #include "RenderPass.hpp"
 #include "TextureUtilities.hpp"
+
+const float FOV = 90.0f / 180.0f * 3.1415f;
 
 int main(int argc, char** argv)
 {
@@ -58,13 +60,32 @@ int main(int argc, char** argv)
 	presentFeatures.renderTarget = Renderer::RenderTarget::PRESENT;
 	Renderer::RenderPass presentPass(env.WindowPtr(), presentFeatures);
 
-	/* Initialise swapchain */
+	/* initialise swapchain */
 	env.InitialiseSwapChain({ &simpleOpaquePass, &presentPass });
 
-	/* Set up the camera */
-	Renderer::FlyingCamera camera(&env, lut::Radians(90.0f).value(), 0.01f, 1000.0f,
+	/* set up the camera */
+	Renderer::ViewerCamera camera(&env, FOV, 0.1f, 500.0f,
 		env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
 	camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
+
+	/* camera data uniform */
+	Renderer::DescriptorSetLayout cameraUniformLayout(&env, { true, true, false }, Renderer::DescriptorSetType::UNIFORM_BUFFER);
+	lut::Buffer cameraUBO = lut::create_buffer(env.Allocator(), sizeof(Renderer::Uniforms::CameraData),
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+	Renderer::FreeUpdateBuffer(&env, &cameraUBO, 0, sizeof(Renderer::Uniforms::CameraData), camera.GetUniformDataPtr());
+	Renderer::DescriptorSet cameraSet(&env, &cameraUniformLayout, *cameraUBO);
+
+	/* set lighting parameters */
+	Renderer::Uniforms::LightData lights;
+	lights.sunLight.direction = glm::normalize(glm::vec4(0.0f, -1.0f, 1.0f, 0.0f));
+	lights.sunLight.colour = glm::normalize(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	/* lighting uniform */
+	Renderer::DescriptorSetLayout lightingUniformLayout(&env, Renderer::ShaderStageConstants::FRAGMENT_STAGE, Renderer::DescriptorSetType::UNIFORM_BUFFER);
+	lut::Buffer lightingUBO = lut::create_buffer(env.Allocator(), sizeof(Renderer::Uniforms::LightData),
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+	Renderer::FreeUpdateBuffer(&env, &lightingUBO, 0, sizeof(Renderer::Uniforms::LightData), &lights);
+	Renderer::DescriptorSet lightingSet(&env, &lightingUniformLayout, *lightingUBO);
 
 	/* material descriptor set(s) */
 	Renderer::DescriptorSetLayoutFeatures simpleLayoutData{};
@@ -87,13 +108,6 @@ int main(int argc, char** argv)
 	singleTextureLayoutData.pBindingTypes = &singleTextureTypes;
 	Renderer::DescriptorSetLayout singleTextureLayout(&env, singleTextureLayoutData);
 
-	/* camera data uniform */
-	Renderer::DescriptorSetLayout cameraUniformLayout(&env, { true, true, false }, Renderer::DescriptorSetType::UNIFORM_BUFFER);
-	lut::Buffer cameraUBO = lut::create_buffer(env.Allocator(), sizeof(Renderer::Uniforms::CameraData),
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
-	Renderer::FreeUpdateBuffer(&env, &cameraUBO, 0, sizeof(Renderer::Uniforms::CameraData), camera.GetUniformDataPtr());
-	Renderer::DescriptorSet cameraSet(&env, &cameraUniformLayout, *cameraUBO);
-
 	/* sampler */
 	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window());
 
@@ -101,7 +115,7 @@ int main(int argc, char** argv)
 	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
 
 	/* Pipelines and Dependencies */
-	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout };
+	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout };
 	Renderer::Pipeline simplePipeline(&env, Renderer::Pipeline_Default, &simpleOpaquePass, simpleLayouts);
 
 	std::vector<const VkDescriptorSetLayout*> postProcessingLayouts = { &*singleTextureLayout };
@@ -127,7 +141,7 @@ int main(int argc, char** argv)
 			simplePipeline.Repair(&env);
 			postPresentPipeline.Repair(&env);
 
-			camera.UpdateCameraSettings(lut::Radians(90.0f).value(),
+			camera.UpdateCameraSettings(FOV,
 				env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
 
 			continue;
@@ -146,8 +160,9 @@ int main(int argc, char** argv)
 		/* Prepare to queue commands */
 		env.BeginFrameCommands();
 
-		/* Update the camera and lighting data uniforms */
+		/* Update the camera and lighting data buffers */
 		Renderer::CmdUpdateBuffer(&env, &cameraUBO, 0, sizeof(Renderer::Uniforms::CameraData), camera.GetUniformDataPtr());
+		Renderer::CmdUpdateBuffer(&env, &lightingUBO, 0, sizeof(Renderer::Uniforms::LightData), &lights);
 
 		/* Begin geometry pass */
 		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
@@ -156,6 +171,7 @@ int main(int argc, char** argv)
 			/* draw meshes */
 			simplePipeline.CmdBind(&env);
 			cameraSet.CmdBind(&env, &simplePipeline, 0);
+			lightingSet.CmdBind(&env, &simplePipeline, 2);
 			model.CmdDrawOpaque(&env, &simplePipeline);
 		}
 

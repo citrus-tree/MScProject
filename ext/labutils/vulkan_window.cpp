@@ -201,6 +201,9 @@ namespace labutils
 		// Window creation and get handle for surface
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
+		/* Disable window resize */
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
 		ret.window = glfwCreateWindow(1080, 720, "Jaina's Window! :-) *** Hold [U] to move the light.", nullptr, nullptr);
 		if (ret.window == nullptr)
 		{
