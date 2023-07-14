@@ -171,5 +171,11 @@
     <None Include="..\res\shaders\present_quad.frag">
       <Filter>res\shaders</Filter>
     </None>
+    <None Include="..\res\shaders\shadowmap.frag">
+      <Filter>res\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\shadowmap.vert">
+      <Filter>res\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

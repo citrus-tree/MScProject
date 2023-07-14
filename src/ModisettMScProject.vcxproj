@@ -63,6 +63,8 @@
     <None Include="..\res\shaders\default.vert" />
     <None Include="..\res\shaders\fullscreen.vert" />
     <None Include="..\res\shaders\present_quad.frag" />
+    <None Include="..\res\shaders\shadowmap.frag" />
+    <None Include="..\res\shaders\shadowmap.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -30,7 +30,7 @@ namespace Renderer
 	ViewerCamera::~ViewerCamera()
 	{}
 
-	void ViewerCamera::FrameUpdate(double delta_time)
+	void ViewerCamera::FrameUpdate(double delta_time, bool* cameraMoved)
 	{
 		/* not ideal, but optimisation will come in a later pass of the project
 			(if time permits). */
@@ -116,6 +116,10 @@ namespace Renderer
 		_forward = glm::vec3(rotation * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
 		_right = glm::cross(_forward, glm::vec3(0.0f, 1.0f, 0.0f));
 		_up = glm::cross(_right, _forward);
+
+		/* return if the camera moved this frame */
+		if (cameraMoved != nullptr)
+			*cameraMoved = (glm::length(trans) > 0.0f || _xRotation * _xRotation > 0.0f || _yRotation * _yRotation > 0.0f);
 	}
 
 	void ViewerCamera::UpdateCameraSettings(float fov, uint32_t frame_width, uint32_t frame_height)
@@ -201,6 +205,11 @@ namespace Renderer
 	const glm::mat4& ViewerCamera::InvView() const
 	{
 		return _invView;
+	}
+
+	const glm::mat4& ViewerCamera::InvProjView() const
+	{
+		return _data.invProjView;
 	}
 
 	void ViewerCamera::PrintPositionalData()

@@ -54,7 +54,7 @@ namespace Renderer
 		public:
 			/* public member functions */
 
-			void FrameUpdate(double delta_time);
+			void FrameUpdate(double delta_time, bool* cameraMoved = nullptr);
 			void UpdateCameraSettings(float fov, uint32_t frame_width, uint32_t frame_height);
 			void SetPosition(glm::vec3 new_position);
 			void SetOrientation(float x, float y);
@@ -77,6 +77,7 @@ namespace Renderer
 			const glm::vec3& Up() const;
 
 			const glm::mat4& InvView() const;
+			const glm::mat4& InvProjView() const;
 
 			void PrintPositionalData();
 	};

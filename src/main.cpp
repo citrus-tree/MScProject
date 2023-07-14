@@ -36,6 +36,7 @@ namespace lut = labutils;
 #include "TextureUtilities.hpp"
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
+const float ShadowBufferDistance = 250.0f;
 
 int main(int argc, char** argv)
 {
@@ -60,13 +61,24 @@ int main(int argc, char** argv)
 	presentFeatures.renderTarget = Renderer::RenderTarget::PRESENT;
 	Renderer::RenderPass presentPass(env.WindowPtr(), presentFeatures);
 
+	Renderer::RenderPassFeatures shadowPassFeatures;
+	shadowPassFeatures.colourPass = Renderer::ColourPass::DISABLED;
+	shadowPassFeatures.depthTest = Renderer::DepthTest::ENABLED;
+	shadowPassFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_SHADOWMAP;
+	Renderer::RenderPass shadowPass(env.WindowPtr(), shadowPassFeatures);
+
 	/* initialise swapchain */
 	env.InitialiseSwapChain({ &simpleOpaquePass, &presentPass });
+
+		/* samplers */
+	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window());
+	lut::Sampler shadowSampler = Renderer::CreateDefaultShadowSampler(env.Window());
 
 	/* set up the camera */
 	Renderer::ViewerCamera camera(&env, FOV, 0.1f, 500.0f,
 		env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
 	camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
+	camera.FrameUpdate(0.01f);
 
 	/* camera data uniform */
 	Renderer::DescriptorSetLayout cameraUniformLayout(&env, { true, true, false }, Renderer::DescriptorSetType::UNIFORM_BUFFER);
@@ -86,6 +98,43 @@ int main(int argc, char** argv)
 		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 	Renderer::FreeUpdateBuffer(&env, &lightingUBO, 0, sizeof(Renderer::Uniforms::LightData), &lights);
 	Renderer::DescriptorSet lightingSet(&env, &lightingUniformLayout, *lightingUBO);
+
+	/* shadow data, uniform, and descriptor sets */
+	Renderer::Uniforms::DirectionalShadowData shadowData;
+	shadowData.Set(&camera, &lights.sunLight, ShadowBufferDistance);
+
+	/* create image buffers for the shadow maps */
+	uint32_t shadowMapStartIndex = env.CreateSideBuffers(&shadowPass, 1, Renderer::Environment::SideBufferType::DEPTH);
+	lut::ImageView* shadowMapView = env.GetSideBufferImageView(shadowMapStartIndex);
+
+	lut::Buffer shadowMapProjUBO = lut::create_buffer(env.Allocator(), sizeof(Renderer::Uniforms::DirectionalShadowData),
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+		Renderer::FreeUpdateBuffer(&env, &shadowMapProjUBO, 0, sizeof(Renderer::Uniforms::DirectionalShadowData), &shadowData);
+
+	Renderer::DescriptorSetLayout shadowMapProjSetLayout(&env, { true, false, false }, Renderer::DescriptorSetType::UNIFORM_BUFFER);
+
+	Renderer::DescriptorSetLayoutFeatures shadowMapSetFeatures;
+	shadowMapSetFeatures.stages.fragment = true;
+	shadowMapSetFeatures.bindingCount = 2;
+	Renderer::DescriptorSetType shadowMapSetTypes[2]
+	{
+		Renderer::DescriptorSetType::SAMPLER, /* shadowmap texture */
+		Renderer::DescriptorSetType::UNIFORM_BUFFER /* shadowmap transform data */
+	};
+	shadowMapSetFeatures.pBindingTypes = shadowMapSetTypes;
+	Renderer::DescriptorSetLayout shadowMapLayout(&env, shadowMapSetFeatures);
+
+	Renderer::DescriptorSet shadowMapProjSet(&env, &shadowMapProjSetLayout, *shadowMapProjUBO);
+	std::vector<Renderer::DescriptorSetFeatures> bindingData{};
+	bindingData.resize(2);
+
+	bindingData[0].binding = 0;
+	bindingData[0].s_View = **shadowMapView;
+	bindingData[0].s_Sampler = *shadowSampler;
+
+	bindingData[1].binding = 1;
+	bindingData[1].u_Buffer = *shadowMapProjUBO;
+	Renderer::DescriptorSet shadowMapSet(&env, &shadowMapLayout, 2, bindingData.data());
 
 	/* material descriptor set(s) */
 	Renderer::DescriptorSetLayoutFeatures simpleLayoutData{};
@@ -108,14 +157,11 @@ int main(int argc, char** argv)
 	singleTextureLayoutData.pBindingTypes = &singleTextureTypes;
 	Renderer::DescriptorSetLayout singleTextureLayout(&env, singleTextureLayoutData);
 
-	/* sampler */
-	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window());
-
 	/* load model */
 	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
 
 	/* Pipelines and Dependencies */
-	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout };
+	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*shadowMapLayout };
 	Renderer::Pipeline simplePipeline(&env, Renderer::Pipeline_Default, &simpleOpaquePass, simpleLayouts);
 
 	std::vector<const VkDescriptorSetLayout*> postProcessingLayouts = { &*singleTextureLayout };
@@ -124,6 +170,13 @@ int main(int argc, char** argv)
 	postPresentFeatures.fillMode = Renderer::FillMode::FILL;
 	postPresentFeatures.specialMode = Renderer::SpecialMode::SCREEN_QUAD_PRESENT;
 	Renderer::Pipeline postPresentPipeline(&env, postPresentFeatures, &presentPass, postProcessingLayouts);
+
+	std::vector<const VkDescriptorSetLayout*> shadowLayouts = { &*shadowMapProjSetLayout };
+	Renderer::PipelineFeatures shadowPipelineFeatures;
+	shadowPipelineFeatures.alphaBlend = Renderer::AlphaBlend::DISABLED;
+	shadowPipelineFeatures.fillMode = Renderer::FillMode::FILL;
+	shadowPipelineFeatures.specialMode = Renderer::SpecialMode::SHADOW_MAP;
+	Renderer::Pipeline shadowPipeline(&env, shadowPipelineFeatures, &shadowPass, shadowLayouts);
 
 	/* Main loop */
 	double time = glfwGetTime();
@@ -155,7 +208,15 @@ int main(int argc, char** argv)
 		double now = glfwGetTime();
 		double timeDelta = now - time;
 		time = now;
-		camera.FrameUpdate(timeDelta);
+		bool moved = false;
+		camera.FrameUpdate(timeDelta, &moved);
+
+		if (moved)
+		{
+			/* update shadow data */
+
+			shadowData.Set(&camera, &lights.sunLight, ShadowBufferDistance);
+		}
 
 		/* Prepare to queue commands */
 		env.BeginFrameCommands();
@@ -163,15 +224,36 @@ int main(int argc, char** argv)
 		/* Update the camera and lighting data buffers */
 		Renderer::CmdUpdateBuffer(&env, &cameraUBO, 0, sizeof(Renderer::Uniforms::CameraData), camera.GetUniformDataPtr());
 		Renderer::CmdUpdateBuffer(&env, &lightingUBO, 0, sizeof(Renderer::Uniforms::LightData), &lights);
+		Renderer::CmdUpdateBuffer(&env, &shadowMapProjUBO, 0, sizeof(Renderer::Uniforms::DirectionalShadowData), &shadowData);
+
+		/* Set the shadow map texture for writing */
+		Renderer::CmdTransitionForWrite(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
+
+		/* Begin shadow map pass */
+		env.BeginRenderPass(&shadowPass, shadowMapStartIndex); /* rendering to shadow map 0 */
+
+		{
+			/* simple meshes */
+			shadowPipeline.CmdBind(&env);
+			shadowMapProjSet.CmdBind(&env, &shadowPipeline, 0);
+			model.CmdDrawOpaque_DepthOnly(&env, &shadowPipeline);
+		}
+
+		/* End render pass */
+		env.EndRenderPass();
+
+		/* Set the shadow map texture for reading */
+		Renderer::CmdTransitionForRead(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
 
 		/* Begin geometry pass */
 		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
 
 		{
-			/* draw meshes */
+			/* Draw meshes */
 			simplePipeline.CmdBind(&env);
 			cameraSet.CmdBind(&env, &simplePipeline, 0);
 			lightingSet.CmdBind(&env, &simplePipeline, 2);
+			shadowMapSet.CmdBind(&env, &simplePipeline, 3);
 			model.CmdDrawOpaque(&env, &simplePipeline);
 		}
 

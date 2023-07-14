@@ -83,6 +83,7 @@ namespace Renderer
 			glm::mat4 view = glm::mat4(1);
 			glm::mat4 projection = glm::mat4(1);
 			glm::mat4 projView = glm::mat4(1);
+			glm::mat4 cam2shadow = glm::mat4(1);
 
 			private:
 				inline float rightTriangleOpposite(float angleRadians, float adjacentSide)
@@ -95,7 +96,7 @@ namespace Renderer
 				}
 
 			public:
-				void Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, unsigned int bufferDistance = 1000.0f);
+				void Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance = 1000.0f);
 		};
 	}
 }
