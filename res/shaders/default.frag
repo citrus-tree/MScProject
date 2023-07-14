@@ -49,6 +49,15 @@ layout(set = 2, binding = 0) uniform LightData
 	AmbientLight ambientLight;
 } lightingData;
 
+layout(set = 3, binding = 0) uniform sampler2DShadow shadowMap;
+layout(set = 3, binding = 1) uniform DirectionalShadowData
+{
+	mat4 view;
+	mat4 projection;
+	mat4 projView;
+	mat4 cam2shadow;
+} shadowData;
+
 /* Helper functions */
 
 float pos(float x)
@@ -66,12 +75,23 @@ float posDot(vec3 left, vec3 right)
 
 vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metallic, float roughness, vec3 cameraPosition)
 {
+	/* direct lighting strength componenets */ 
 	vec3 to_cam = normalize(cameraPosition.rgb - position);
 	vec3 to_light = normalize(-lightingData.sunLight.direction.rgb);
 	vec3 half_vector = normalize(to_cam + to_light);
 
-	vec3 direct = lightingData.sunLight.colour.rgb * diffuse;
+	/* shadow coverage calculation */
+	vec4 shadowViewPosition = shadowData.projView * vec4(position, 1.0);
+	vec4 shadowCoords = vec4(shadowViewPosition / shadowViewPosition.w);
+	shadowCoords.x = shadowCoords.x * 0.5 + 0.5;
+	shadowCoords.y = shadowCoords.y * 0.5 + 0.5;
+	shadowCoords.w = 1.0;
+
+	float shadowStrength = textureProj(shadowMap, shadowCoords);
+
+	vec3 direct = lightingData.sunLight.colour.rgb * diffuse * shadowStrength;
 	vec3 ambient = lightingData.ambientLight.colour.rgb * diffuse;
+
 	return ambient + (posDot(normal, to_light)) * direct;
 }
 
