@@ -304,4 +304,47 @@ namespace Renderer
 		}
 	}
 
+	void Model::CmdDrawTransparent(Environment* environment, Pipeline* pipeline, bool materialOverriden)
+	{
+		CmdDrawTransparent(environment, pipeline, 0, _transparentMeshes.size());
+	}
+
+	void Model::CmdDrawTransparent(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden)
+	{
+		for (size_t i = start; i < end; i++)
+		{
+			const MeshData& cur_mesh = _meshes[_transparentMeshes[i]];
+
+			VkBuffer buffers[3] = { *cur_mesh.positions, *cur_mesh.uvs, *cur_mesh.normals };
+			VkDeviceSize offsets[3]{ 0, 0, 0 };
+
+			if (materialOverriden == false)
+				_materialData[_meshes[_transparentMeshes[i]].materialIndex].descriptorSet->CmdBind(environment, pipeline, 1);
+
+			vkCmdBindVertexBuffers(*environment->CurrentCmdBuffer(), 0, 3, buffers, offsets);
+			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdDrawIndexed(*environment->CurrentCmdBuffer(), cur_mesh.indicesSize, 1, 0, 0, 0);
+		}
+	}
+
+	void Model::CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline)
+	{
+		CmdDrawTransparent_DepthOnly(environment, pipeline, 0, _transparentMeshes.size());
+	}
+
+	void Model::CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end)
+	{
+		for (size_t i = start; i < end; i++)
+		{
+			const MeshData& cur_mesh = _meshes[_transparentMeshes[i]];
+
+			VkBuffer buffers[2] = { *cur_mesh.positions, *cur_mesh.uvs };
+			VkDeviceSize offsets[2]{ 0, 0 };
+
+			vkCmdBindVertexBuffers(*environment->CurrentCmdBuffer(), 0, 2, buffers, offsets);
+			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdDrawIndexed(*environment->CurrentCmdBuffer(), cur_mesh.indicesSize, 1, 0, 0, 0);
+		}
+	}
+
 }

@@ -164,6 +164,10 @@ int main(int argc, char** argv)
 	/* Pipelines and Dependencies */
 	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*shadowMapLayout };
 	Renderer::Pipeline simplePipeline(&env, Renderer::Pipeline_Default, &simpleOpaquePass, simpleLayouts);
+	
+	Renderer::PipelineFeatures transparentFeatures = Renderer::Pipeline_Default;
+	transparentFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
+	Renderer::Pipeline transparentPipeline(&env, transparentFeatures, &simpleOpaquePass, simpleLayouts);
 
 	std::vector<const VkDescriptorSetLayout*> postProcessingLayouts = { &*singleTextureLayout };
 	Renderer::PipelineFeatures postPresentFeatures;
@@ -193,6 +197,7 @@ int main(int argc, char** argv)
 		if (env.CheckSwapChain({ &simpleOpaquePass, &presentPass }) != ErrorCode::SUCCESS)
 		{
 			simplePipeline.Repair(&env);
+			transparentPipeline.Repair(&env);
 			postPresentPipeline.Repair(&env);
 
 			camera.UpdateCameraSettings(FOV,
@@ -256,11 +261,20 @@ int main(int argc, char** argv)
 
 		{
 			/* Draw meshes */
+
+			/* opaque geometry */
 			simplePipeline.CmdBind(&env);
 			cameraSet.CmdBind(&env, &simplePipeline, 0);
 			lightingSet.CmdBind(&env, &simplePipeline, 2);
 			shadowMapSet.CmdBind(&env, &simplePipeline, 3);
 			model.CmdDrawOpaque(&env, &simplePipeline);
+
+			/* transparent geometry */
+			transparentPipeline.CmdBind(&env);
+			cameraSet.CmdBind(&env, &transparentPipeline, 0);
+			lightingSet.CmdBind(&env, &transparentPipeline, 2);
+			shadowMapSet.CmdBind(&env, &transparentPipeline, 3);
+			model.CmdDrawTransparent(&env, &transparentPipeline);
 		}
 
 		/* End render pass */

@@ -75,27 +75,10 @@ namespace Renderer
 		{
 			switch (_initData.fragmentMode)
 			{
-				case (FragmentMode::OPAQUE):
+				case (FragmentMode::SIMPLE):
+				default:
 					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
 					frag = load_shader_module(environment->Window(), "../res/shaders/" "default.frag.spv");
-					stagesInfo.resize(2);
-					break;
-
-				case (FragmentMode::ALPHA_CLIPPED):
-					vert = load_shader_module(environment->Window(), "../res/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "../res/shaders/" "alpha_clipped.frag.spv");
-					stagesInfo.resize(2);
-					break;
-
-				case (FragmentMode::NORMAL_MAPPED):
-					vert = load_shader_module(environment->Window(), "../res/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "../res/shaders/" "normal_mapped.frag.spv");
-					stagesInfo.resize(2);
-					break;
-
-				case (FragmentMode::COMPLEX):
-					vert = load_shader_module(environment->Window(), "../res/shaders/" "simple.vert.spv");
-					frag = load_shader_module(environment->Window(), "../res/shaders/" "complex.frag.spv");
 					stagesInfo.resize(2);
 					break;
 			}
@@ -269,6 +252,9 @@ namespace Renderer
 			blendState[0].colorBlendOp = VK_BLEND_OP_ADD;
 			blendState[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 			blendState[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			blendState[0].alphaBlendOp = VK_BLEND_OP_ADD;
+			blendState[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			blendState[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 		}
 		else
 		{

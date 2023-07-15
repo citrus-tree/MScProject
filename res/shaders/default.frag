@@ -106,5 +106,5 @@ void main()
 	float metallic = uMaterialData.metallic;// * texture(UMetallicRoughnessTex, iUV).r;
 	float roughness = uMaterialData.roughness;// * texture(UMetallicRoughnessTex, iUV).g;
 	vec3 lit = uMaterialData.emissive + LightingCalculation(iPosition, normalize(iNormal), diffuse, 0.0, 0.0, cameraData.position.rgb);
-	oColour = vec4(lit, 1.0);
+	oColour = vec4(lit, texture(uColourTex, iUV).a);
 }

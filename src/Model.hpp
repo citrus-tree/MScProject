@@ -120,5 +120,10 @@ namespace Renderer
 			void CmdDrawOpaque(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
 			void CmdDrawOpaque_DepthOnly(Environment* environment, Pipeline* pipeline);
 			void CmdDrawOpaque_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end);
+
+			void CmdDrawTransparent(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
+			void CmdDrawTransparent(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
+			void CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline);
+			void CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end);
 	};
 }

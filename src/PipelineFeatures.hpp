@@ -18,10 +18,7 @@ namespace Renderer
 
 	enum class FragmentMode
 	{
-		OPAQUE = 0,
-		ALPHA_CLIPPED,
-		NORMAL_MAPPED,
-		COMPLEX,
+		SIMPLE = 0
 	};
 	
 	enum class SpecialMode
@@ -45,7 +42,7 @@ namespace Renderer
 	{
 		AlphaBlend::DISABLED,
 		FillMode::FILL,
-		FragmentMode::OPAQUE,
+		FragmentMode::SIMPLE,
 		SpecialMode::NONE,
 		{}
 	};
