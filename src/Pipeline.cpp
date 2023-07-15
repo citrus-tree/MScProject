@@ -169,17 +169,20 @@ namespace Renderer
 			vertexAttributes[1].format = VK_FORMAT_R32G32_SFLOAT;
 			vertexAttributes[1].offset = 0;
 
-				/* Normals input info */
-			vertexInputs.push_back({});
-			vertexInputs[2].binding = 2;
-			vertexInputs[2].stride = sizeof(float) * 3;
-			vertexInputs[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+			if (_initData.specialMode == SpecialMode::NONE)
+			{
+					/* Normals input info */
+				vertexInputs.push_back({});
+				vertexInputs[2].binding = 2;
+				vertexInputs[2].stride = sizeof(float) * 3;
+				vertexInputs[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-			vertexAttributes.push_back({});
-			vertexAttributes[2].binding = 2;
-			vertexAttributes[2].location = 2;
-			vertexAttributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-			vertexAttributes[2].offset = 0;
+				vertexAttributes.push_back({});
+				vertexAttributes[2].binding = 2;
+				vertexAttributes[2].location = 2;
+				vertexAttributes[2].format = VK_FORMAT_R32G32B32_SFLOAT;
+				vertexAttributes[2].offset = 0;
+			}
 
 			/* Input state info continued */
 			vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputs.size());
@@ -237,7 +240,7 @@ namespace Renderer
 		/* Rasterisation Behaviour Settings */
 		VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
 		rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizationInfo.cullMode = (_initData.specialMode == SpecialMode::SHADOW_MAP) ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_BACK_BIT;
+		rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
 		rasterizationInfo.depthBiasEnable = VK_FALSE;
 		rasterizationInfo.depthClampEnable = VK_FALSE;
 		rasterizationInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;

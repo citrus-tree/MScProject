@@ -10,7 +10,7 @@ namespace Renderer
 {
 	namespace Uniforms
 	{
-		void DirectionalShadowData::Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance)
+		void DirectionalShadowData::Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance, float shadowDistance)
 		{
 			/* first calculate the bounds of the camera frustum */
 
@@ -18,11 +18,16 @@ namespace Renderer
 			std::vector<glm::vec3> worldPoints;
 			std::vector<glm::vec3> shadowLocalPoints;
 
+			float near = camera->NearDist();
+			float far = std::min(camera->FarDist(), shadowDistance);
+			if (shadowDistance <= camera->NearDist())
+				far = camera->FarDist();
+
 			/* near and far width and height */
 			float recipAspect = camera->Aspect();
-			float nearHeight = rightTriangleOpposite(camera->FOVY() / 2.0f, camera->NearDist());
+			float nearHeight = rightTriangleOpposite(camera->FOVY() / 2.0f, near);
 			float nearWidth = recipAspect * nearHeight;
-			float farHeight = rightTriangleOpposite(camera->FOVY() / 2.0f, camera->FarDist());
+			float farHeight = rightTriangleOpposite(camera->FOVY() / 2.0f, far);
 			float farWidth = recipAspect * farHeight;
 
 			/* calculate the camera localPoints and midpoint */
@@ -30,15 +35,8 @@ namespace Renderer
 			{
 				for (float h = -1.0f; h < 1.01f; h += 2.0f)
 				{
-					cameraLocalPoints.push_back(
-						camera->Forward() * camera->NearDist() + 
-						camera->Right() * nearWidth + 
-						camera->Up() * nearHeight);
-
-					cameraLocalPoints.push_back(
-						camera->Forward() * camera->FarDist() +
-						camera->Right() * farWidth +
-						camera->Up() * farHeight);
+					cameraLocalPoints.push_back(glm::vec3(nearWidth * w, nearHeight * h, near));
+					cameraLocalPoints.push_back(glm::vec3(farWidth * w, farHeight * h, far));
 				}
 			}
 
@@ -49,7 +47,7 @@ namespace Renderer
 
 			/* transform the points into world space */
 			for (size_t i = 0; i < cameraLocalPoints.size(); i++)
-				worldPoints.push_back(glm::vec4(cameraLocalPoints[i], 1.0f) * camera->InvView());
+				worldPoints.push_back(cameraLocalPoints[i]);
 
 			/* calculate the camera orientation min and max */
 
@@ -94,7 +92,7 @@ namespace Renderer
 				(minY + maxY) * 0.5f,
 				(maxZ + minZ) * 0.5f);
 
-			glm::vec3 lightPosition = lightTarget + (lightSpanZ * 0.5f) + bufferDistance;
+			glm::vec3 lightPosition = lightTarget - (lightSpanZ * 0.5f + bufferDistance) * glm::vec3(sunLight->direction);
 
 			/* calculate the shadow projection-view matrix */
 			projection = glm::orthoRH_ZO(
@@ -104,7 +102,6 @@ namespace Renderer
 				lightSpanY * 0.5f,
 				0.01f,
 				lightSpanZ + bufferDistance);
-			projection[1][1] = -1.0f;
 
 			view = glm::lookAtRH(lightPosition, lightTarget, lightUp);
 

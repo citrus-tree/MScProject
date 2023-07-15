@@ -3,6 +3,8 @@
 float eps = 0.0001;
 float pi = 3.141592;
 
+float normal_bias = 0.02;
+
 /* Here be data */
 
 layout(location = 0) in vec3 iPosition;
@@ -81,7 +83,8 @@ vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metalli
 	vec3 half_vector = normalize(to_cam + to_light);
 
 	/* shadow coverage calculation */
-	vec4 shadowViewPosition = shadowData.projView * vec4(position, 1.0);
+	vec3 normalBiasVector = normal * normal_bias;
+	vec4 shadowViewPosition = shadowData.projView * vec4(position + normalBiasVector, 1.0);
 	vec4 shadowCoords = vec4(shadowViewPosition / shadowViewPosition.w);
 	shadowCoords.x = shadowCoords.x * 0.5 + 0.5;
 	shadowCoords.y = shadowCoords.y * 0.5 + 0.5;

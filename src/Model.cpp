@@ -286,14 +286,14 @@ namespace Renderer
 
 	void Model::CmdDrawOpaque_DepthOnly(Environment* environment, Pipeline* pipeline)
 	{
-		CmdDrawOpaque_DepthOnly(environment, pipeline, 0, _transparentMeshes.size());
+		CmdDrawOpaque_DepthOnly(environment, pipeline, 0, _opaqueMeshes.size());
 	}
 
 	void Model::CmdDrawOpaque_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end)
 	{
 		for (size_t i = start; i < end; i++)
 		{
-			const MeshData& cur_mesh = _meshes[_transparentMeshes[i]];
+			const MeshData& cur_mesh = _meshes[_opaqueMeshes[i]];
 
 			VkBuffer buffers[2] = { *cur_mesh.positions, *cur_mesh.uvs };
 			VkDeviceSize offsets[2]{ 0, 0 };

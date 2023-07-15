@@ -36,7 +36,8 @@ namespace lut = labutils;
 #include "TextureUtilities.hpp"
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
-const float ShadowBufferDistance = 250.0f;
+const float FarClipDist = 20.0f;
+const float ShadowBufferDistance = 100.0f;
 
 int main(int argc, char** argv)
 {
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
 	lut::Sampler shadowSampler = Renderer::CreateDefaultShadowSampler(env.Window());
 
 	/* set up the camera */
-	Renderer::ViewerCamera camera(&env, FOV, 0.1f, 500.0f,
+	Renderer::ViewerCamera camera(&env, FOV, 0.1f, FarClipDist,
 		env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
 	camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
 	camera.FrameUpdate(0.01f);
@@ -89,7 +90,7 @@ int main(int argc, char** argv)
 
 	/* set lighting parameters */
 	Renderer::Uniforms::LightData lights;
-	lights.sunLight.direction = glm::normalize(glm::vec4(0.0f, -1.0f, 1.0f, 0.0f));
+	lights.sunLight.direction = glm::normalize(glm::vec4(1.0f, -1.0f, 0.0f, 0.0f));
 	lights.sunLight.colour = glm::normalize(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	/* lighting uniform */
@@ -180,7 +181,7 @@ int main(int argc, char** argv)
 
 	/* Main loop */
 	double time = glfwGetTime();
-
+	bool firstFrame = true;
 	while (glfwWindowShouldClose(env.Window().window) == false)
 	{
 		/* Window polling */
@@ -227,6 +228,11 @@ int main(int argc, char** argv)
 		Renderer::CmdUpdateBuffer(&env, &shadowMapProjUBO, 0, sizeof(Renderer::Uniforms::DirectionalShadowData), &shadowData);
 
 		/* Set the shadow map texture for writing */
+		if (firstFrame)
+		{
+			firstFrame = false;
+			Renderer::CmdPrimeImageForRead(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
+		}
 		Renderer::CmdTransitionForWrite(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
 
 		/* Begin shadow map pass */

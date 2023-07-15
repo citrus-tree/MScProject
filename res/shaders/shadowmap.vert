@@ -1,6 +1,7 @@
 #version 450
 
 layout(location = 0) in vec3 iPosition;
+layout(location = 1) in vec2 iUV;
 
 layout(set = 0, binding = 0) uniform ShadowData
 {
@@ -8,7 +9,6 @@ layout(set = 0, binding = 0) uniform ShadowData
 	mat4 projection;
 	mat4 projView;
 } shadowData;
-
 
 void main()
 {
