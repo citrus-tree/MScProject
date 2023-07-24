@@ -21,11 +21,25 @@ namespace Renderer
 		TEXTURE_COLORDEPTH
 	};
 
+	enum class ClearDepth
+	{
+		ENABLED = 0,
+		DISABLED
+	};
+
+	enum class ClearColour
+	{
+		ENABLED = 0,
+		DISABLED
+	};
+
 	struct RenderPassFeatures
 	{
 		ColourPass colourPass{};
 		DepthTest depthTest{};
 		RenderTarget renderTarget{};
+		ClearDepth clearDepth{};
+		ClearColour clearColour{};
 	};
 
 	/* Default Settings */
@@ -33,6 +47,8 @@ namespace Renderer
 	{
 		ColourPass::ENABLED,
 		DepthTest::ENABLED,
-		RenderTarget::PRESENT
+		RenderTarget::PRESENT,
+		ClearDepth::ENABLED,
+		ClearColour::ENABLED
 	};
 }

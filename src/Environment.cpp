@@ -411,7 +411,8 @@ namespace Renderer
 		_frameStrat = _frameStrat->Execute(this);
 	}
 
-	void Environment::BeginRenderPass(const Renderer::RenderPass* render_pass, int32_t side_buffer_index, uint32_t targetWidth, uint32_t targetHeight)
+	void Environment::BeginRenderPass(const Renderer::RenderPass* render_pass, int32_t side_buffer_index,
+		uint32_t targetWidth, uint32_t targetHeight)
 	{
 		assert(_state == State::RECORDING_NOPASS);
 
@@ -425,7 +426,7 @@ namespace Renderer
 		/* Get ready to start the render pass */
 		std::vector<VkClearValue> clearValues{};
 
-		if (render_pass->Features().colourPass == ColourPass::ENABLED)
+		if (render_pass->Features().colourPass == ColourPass::ENABLED && render_pass->Features().clearColour == ClearColour::ENABLED)
 		{
 			clearValues.push_back({});
 			/*clearValues.back().color.float32[0] = 0.53f;
@@ -439,7 +440,7 @@ namespace Renderer
 			clearValues.back().color.float32[3] = 1.0f;
 		}
 
-		if (render_pass->Features().depthTest == DepthTest::ENABLED)
+		if (render_pass->Features().depthTest == DepthTest::ENABLED && render_pass->Features().clearDepth == ClearDepth::ENABLED)
 		{
 			clearValues.push_back({});
 			clearValues.back().depthStencil.depth = 1.0f;
@@ -464,11 +465,8 @@ namespace Renderer
 		}
 		passInfo.renderArea.offset = VkOffset2D{ 0, 0 };
 		passInfo.renderArea.extent = resolution;
-		if (clearValues.size() > 0)
-		{
-			passInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			passInfo.pClearValues = clearValues.data();
-		}
+		passInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		passInfo.pClearValues = clearValues.data();
 
 		/* Actually start the render pass */
 		vkCmdBeginRenderPass(_cmdBuffers[_currentSwapImage], &passInfo, VK_SUBPASS_CONTENTS_INLINE);

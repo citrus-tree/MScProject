@@ -88,7 +88,6 @@ vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metalli
 	vec3 normalBiasVector = normal * normal_bias;
 	vec4 shadowViewPosition = shadowData.projView * vec4(position + normalBiasVector, 1.0);
 	vec4 shadowCoords = vec4(shadowViewPosition / shadowViewPosition.w);
-	vec2 shadowUVs = shadowCoords.xy;
 	shadowCoords.x = shadowCoords.x * 0.5 + 0.5;
 	shadowCoords.y = shadowCoords.y * 0.5 + 0.5;
 	shadowCoords.w = 1.0;
@@ -98,7 +97,7 @@ vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metalli
 	float colouredShadowStrength = 1.0 - textureProj(transparentShadowMap, shadowCoords);
 	vec3 shadowColour = vec3(1.0, 1.0, 1.0) + (texture(colouredShadowMap, shadowCoords.xy).rgb - vec3(1.0, 1.0, 1.0)) * colouredShadowStrength;
 
-	vec3 direct = lightingData.sunLight.colour.rgb * diffuse * shadowColour;
+	vec3 direct = lightingData.sunLight.colour.rgb * diffuse * shadowStrength * shadowColour;
 	vec3 ambient = lightingData.ambientLight.colour.rgb * diffuse;
 
 	return ambient + (posDot(normal, to_light)) * direct;

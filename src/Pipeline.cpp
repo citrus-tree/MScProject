@@ -228,7 +228,7 @@ namespace Renderer
 
 		if (_epRenderPass->Features().depthTest == DepthTest::ENABLED && _initData.depthTest == DepthTest::ENABLED)
 		{
-			depthInfo.depthWriteEnable = (_initData.depthWrite == DepthWrite::ENABLED);
+			depthInfo.depthWriteEnable = (_initData.depthWrite == DepthWrite::ENABLED) ? VK_TRUE : VK_FALSE;
 			depthInfo.depthTestEnable = VK_TRUE;
 
 			switch(_initData.depthOp)

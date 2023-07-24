@@ -51,7 +51,7 @@ namespace Renderer
 			/* Colour Buffer */
 			attachments[curAttachInd].format = window->swapchainFormat;
 			attachments[curAttachInd].samples = VK_SAMPLE_COUNT_1_BIT;
-			attachments[curAttachInd].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			attachments[curAttachInd].loadOp = (_initData.clearColour == ClearColour::ENABLED) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 			attachments[curAttachInd].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachments[curAttachInd].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			if (_initData.renderTarget == RenderTarget::PRESENT)
@@ -70,8 +70,8 @@ namespace Renderer
 			/* Depth Buffer */
 			attachments[curAttachInd].format = VK_FORMAT_D32_SFLOAT;
 			attachments[curAttachInd].samples = VK_SAMPLE_COUNT_1_BIT;
-			attachments[curAttachInd].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-			attachments[curAttachInd].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			attachments[curAttachInd].loadOp = (_initData.clearDepth == ClearDepth::ENABLED) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+			attachments[curAttachInd].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 			attachments[curAttachInd].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			attachments[curAttachInd].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
