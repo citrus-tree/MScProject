@@ -411,9 +411,16 @@ namespace Renderer
 		_frameStrat = _frameStrat->Execute(this);
 	}
 
-	void Environment::BeginRenderPass(const Renderer::RenderPass* render_pass, int32_t side_buffer_index)
+	void Environment::BeginRenderPass(const Renderer::RenderPass* render_pass, int32_t side_buffer_index, uint32_t targetWidth, uint32_t targetHeight)
 	{
 		assert(_state == State::RECORDING_NOPASS);
+
+		VkExtent2D resolution = { targetWidth, targetHeight };
+		if (resolution.width == 0 || resolution.height == 0)
+		{
+			resolution = (render_pass->Features().renderTarget == RenderTarget::TEXTURE_SHADOWMAP) ?
+				VkExtent2D{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION } : _window.swapchainExtent;
+		}
 
 		/* Get ready to start the render pass */
 		std::vector<VkClearValue> clearValues{};
@@ -456,8 +463,7 @@ namespace Renderer
 			passInfo.framebuffer = *_sideFramebuffers[side_buffer_index];
 		}
 		passInfo.renderArea.offset = VkOffset2D{ 0, 0 };
-		passInfo.renderArea.extent = (render_pass->Features().renderTarget == RenderTarget::TEXTURE_SHADOWMAP) ?
-			VkExtent2D{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION } : _window.swapchainExtent;
+		passInfo.renderArea.extent = resolution;
 		if (clearValues.size() > 0)
 		{
 			passInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
@@ -643,8 +649,8 @@ namespace Renderer
 		assert(count > 0);
 		assert((sharedBuffers) ? (shareData != nullptr) : true);
 
-		uint32_t width = (Width >= 0) ? Width : _window.swapchainExtent.width;
-		uint32_t height = (Height >= 0) ? Height : _window.swapchainExtent.width;
+		uint32_t width = (Width >= 0) ? Width : ((type == SideBufferType::DEPTH) ? SHADOW_MAP_RESOLUTION : _window.swapchainExtent.width);
+		uint32_t height = (Height >= 0) ? Height : ((type == SideBufferType::DEPTH) ? SHADOW_MAP_RESOLUTION : _window.swapchainExtent.height);
 		VkExtent2D resolution = { width, height };
 
 		uint32_t ret = static_cast<uint32_t>(_sideBufferViews.size());
@@ -660,7 +666,7 @@ namespace Renderer
 
 			if (type == SideBufferType::COLOUR || type == SideBufferType::COMBINED)
 			{
-				if (sharedBuffers == true && shareData->colourIndex != -1 && shareData->colourSubindex != -1)
+				if (sharedBuffers == true && shareData->colourIndex > -1 && shareData->colourSubindex > -1)
 				{
 					views.push_back(*GetSideBufferImageView(shareData->colourIndex)->at(shareData->colourSubindex));
 				}
@@ -671,8 +677,8 @@ namespace Renderer
 					imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 					imageInfo.imageType = VK_IMAGE_TYPE_2D;
 					imageInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-					imageInfo.extent.width = _window.swapchainExtent.width;
-					imageInfo.extent.height = _window.swapchainExtent.height;
+					imageInfo.extent.width = resolution.width;
+					imageInfo.extent.height = resolution.height;
 					imageInfo.extent.depth = 1;
 					imageInfo.mipLevels = 1;
 					imageInfo.arrayLayers = 1;
@@ -728,9 +734,9 @@ namespace Renderer
 					views.push_back(view);
 				}
 			}
-			else if (type == SideBufferType::DEPTH || type == SideBufferType::COMBINED)
+			if (type == SideBufferType::DEPTH || type == SideBufferType::COMBINED)
 			{
-				if (sharedBuffers == true && shareData->depthIndex != -1 && shareData->depthSubindex != -1)
+				if (sharedBuffers == true && shareData->depthIndex > -1 && shareData->depthSubindex > -1)
 				{
 					views.push_back(*GetSideBufferImageView(shareData->depthIndex)->at(shareData->depthSubindex));
 				}
@@ -741,8 +747,8 @@ namespace Renderer
 					imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 					imageInfo.imageType = VK_IMAGE_TYPE_2D;
 					imageInfo.format = VK_FORMAT_D32_SFLOAT;
-					imageInfo.extent.width = SHADOW_MAP_RESOLUTION;
-					imageInfo.extent.height = SHADOW_MAP_RESOLUTION;
+					imageInfo.extent.width = resolution.width;
+					imageInfo.extent.height = resolution.height;
 					imageInfo.extent.depth = 1;
 					imageInfo.mipLevels = 1;
 					imageInfo.arrayLayers = 1;
@@ -802,7 +808,7 @@ namespace Renderer
 			fbInfo.attachmentCount = static_cast<uint32_t>(views.size());
 			fbInfo.pAttachments = views.data();
 			fbInfo.width = resolution.width;
-			fbInfo.height = resolution.width;
+			fbInfo.height = resolution.height;
 			fbInfo.layers = 1;
 
 			VkFramebuffer framebuffer = VK_NULL_HANDLE;

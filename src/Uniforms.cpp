@@ -10,7 +10,7 @@ namespace Renderer
 {
 	namespace Uniforms
 	{
-		void DirectionalShadowData::Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance, float shadowDistance)
+		void DirectionalShadowData::Update(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance, float shadowDistance)
 		{
 			/* first calculate the bounds of the camera frustum */
 

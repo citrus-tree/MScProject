@@ -66,6 +66,9 @@
     <None Include="..\res\shaders\present_quad.frag" />
     <None Include="..\res\shaders\shadowmap.frag" />
     <None Include="..\res\shaders\shadowmap.vert" />
+    <None Include="..\res\shaders\TS_colouredShadowPass.frag" />
+    <None Include="..\res\shaders\TS_colouredShadowPass.vert" />
+    <None Include="..\res\shaders\TS_geometryPass.frag" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

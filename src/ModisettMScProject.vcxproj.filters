@@ -180,5 +180,14 @@
     <None Include="..\res\shaders\shadowmap.vert">
       <Filter>res\shaders</Filter>
     </None>
+    <None Include="..\res\shaders\TS_colouredShadowPass.frag">
+      <Filter>res\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\TS_geometryPass.frag">
+      <Filter>res\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\TS_colouredShadowPass.vert">
+      <Filter>res\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

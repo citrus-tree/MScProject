@@ -27,7 +27,9 @@ namespace Renderer
 	{
 		NONE = 0,
 		SCREEN_QUAD_PRESENT,
-		SHADOW_MAP
+		SHADOW_MAP,
+		TS_GEOMETRY,
+		TS_COLOURED_SHADOW_MAP
 	};
 
 	enum class DepthWrite

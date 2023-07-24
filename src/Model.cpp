@@ -192,8 +192,8 @@ namespace Renderer
 					buffer.data.data() + bufferView.byteOffset);
 
 					/* calculate center point of mesh */
-				glm::vec3 minBound = glm::vec3(accessor.minValues[0], accessor.minValues[1], accessor.minValues[2]);
-				glm::vec3 maxBound = glm::vec3(accessor.maxValues[0], accessor.maxValues[1], accessor.maxValues[2]);
+				glm::vec3 minBound = -glm::vec3(accessor.minValues[0], accessor.minValues[1], accessor.minValues[2]);
+				glm::vec3 maxBound = -glm::vec3(accessor.maxValues[0], accessor.maxValues[1], accessor.maxValues[2]);
 				_meshes[offset].centerPt = (minBound + maxBound) * 0.5f;
 
 				/* upload normal data */
@@ -375,65 +375,80 @@ namespace Renderer
 		}
 	}
 
-	void Model::SortTransparentGeometry(glm::vec3 lightPosition, glm::vec3 cameraPosition)
+	void Model::SortTransparentGeometry(glm::vec3 lightPosition, glm::vec3 cameraPosition, bool sortLight, bool sortCamera)
 	{
-		_transparentMeshesSortedClosestToLight.push_back(0);
-		_transparentMeshesSortedFarthestFromCamera.push_back(0);
+		if (sortLight)
+		{
+			_transparentMeshesSortedClosestToLight.clear();
+			_transparentMeshesSortedClosestToLight.push_back(0);
+		}
+
+		if (sortCamera)
+		{
+			_transparentMeshesSortedFarthestFromCamera.clear();
+			_transparentMeshesSortedFarthestFromCamera.push_back(0);
+		}
 
 		for (int i = 1; i < _transparentMeshes.size(); i++)
 		{
 			glm::vec3 curCenter = _meshes[_transparentMeshes[i]].centerPt;
 
-			glm::vec3 curToLight = curCenter - lightPosition;
-			float curDistanceToLight = glm::dot(curToLight, curToLight); /* technically the squared distance */
-
-			glm::vec3 curToCamera = curCenter - cameraPosition;
-			float curDistToCamera = glm::dot(curToCamera, curToCamera);
-
-			bool added = false;
-			for (int c = 0; c < _transparentMeshesSortedClosestToLight.size(); c++)
+			if (sortLight)
 			{
-				glm::vec3 otherCenter = _meshes[_transparentMeshes[c]].centerPt;
+				glm::vec3 curToLight = curCenter - lightPosition;
+				float curDistanceToLight = glm::dot(curToLight, curToLight); /* technically the squared distance */
 
-				glm::vec3 otherToLight = otherCenter - lightPosition;
-				float otherDistanceToLight = glm::dot(otherToLight, otherToLight); /* also squared distance */
-
-				if (curDistanceToLight < otherDistanceToLight)
+				bool added = false;
+				for (int c = 0; c < _transparentMeshesSortedClosestToLight.size(); c++)
 				{
-					_transparentMeshesSortedClosestToLight.emplace(
-						_transparentMeshesSortedClosestToLight.begin() + c,
-						i);
+					glm::vec3 otherCenter = _meshes[_transparentMeshes[c]].centerPt;
 
-					added = true;
-					break;
+					glm::vec3 otherToLight = otherCenter - lightPosition;
+					float otherDistanceToLight = glm::dot(otherToLight, otherToLight); /* also squared distance */
+
+					if (curDistanceToLight < otherDistanceToLight)
+					{
+						_transparentMeshesSortedClosestToLight.emplace(
+							_transparentMeshesSortedClosestToLight.begin() + c,
+							i);
+
+						added = true;
+						break;
+					}
+				}
+				if (added == false)
+				{
+					_transparentMeshesSortedClosestToLight.emplace_back(i);
 				}
 			}
-			if (added == false)
+
+			if (sortCamera)
 			{
-				_transparentMeshesSortedClosestToLight.emplace_back(i);
-			}
+				glm::vec3 curToCamera = curCenter - cameraPosition;
+				float curDistToCamera = glm::dot(curToCamera, curToCamera);
 
-			added = false;
-			for (int f = 0; f < _transparentMeshesSortedFarthestFromCamera.size(); f++)
-			{
-				glm::vec3 otherCenter = _meshes[_transparentMeshes[f]].centerPt;
-
-				glm::vec3 otherToCamera = otherCenter - cameraPosition;
-				float otherDistToCamera = glm::dot(otherToCamera, otherToCamera);
-
-				if (curDistToCamera > otherDistToCamera)
+				bool added = false;
+				for (int f = 0; f < _transparentMeshesSortedFarthestFromCamera.size(); f++)
 				{
-					_transparentMeshesSortedFarthestFromCamera.emplace(
-						_transparentMeshesSortedFarthestFromCamera.begin() + f,
-						i);
+					glm::vec3 otherCenter = _meshes[_transparentMeshes[f]].centerPt;
 
-					added = true;
-					break;
+					glm::vec3 otherToCamera = otherCenter - cameraPosition;
+					float otherDistToCamera = glm::dot(otherToCamera, otherToCamera);
+
+					if (curDistToCamera > otherDistToCamera)
+					{
+						_transparentMeshesSortedFarthestFromCamera.emplace(
+							_transparentMeshesSortedFarthestFromCamera.begin() + f,
+							i);			
+
+						added = true;
+						break;
+					}
 				}
-			}
-			if (added == false)
-			{
-				_transparentMeshesSortedFarthestFromCamera.emplace_back(i);
+				if (added == false)
+				{
+					_transparentMeshesSortedFarthestFromCamera.emplace_back(i);
+				}
 			}
 		}
 	}
@@ -458,6 +473,28 @@ namespace Renderer
 				_materialData[_meshes[_transparentMeshes[i]].materialIndex].descriptorSet->CmdBind(environment, pipeline, 1);
 
 			vkCmdBindVertexBuffers(*environment->CurrentCmdBuffer(), 0, 3, buffers, offsets);
+			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdDrawIndexed(*environment->CurrentCmdBuffer(), cur_mesh.indicesSize, 1, 0, 0, 0);
+		}
+	}
+
+	void Model::CmdDrawTransparentLightFrontToBack_DepthOnly(Environment* environment, Pipeline* pipeline, bool materialOverriden)
+	{
+		CmdDrawTransparentLightFrontToBack_DepthOnly(environment, pipeline, 0, _transparentMeshes.size());
+	}
+
+	void Model::CmdDrawTransparentLightFrontToBack_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden)
+	{
+		for (size_t m = start; m < end; m++)
+		{
+			size_t i = _transparentMeshesSortedClosestToLight[m];
+
+			const MeshData& cur_mesh = _meshes[_transparentMeshes[i]];
+
+			VkBuffer buffers[2] = { *cur_mesh.positions, *cur_mesh.uvs };
+			VkDeviceSize offsets[2]{ 0, 0 };
+
+			vkCmdBindVertexBuffers(*environment->CurrentCmdBuffer(), 0, 2, buffers, offsets);
 			vkCmdBindIndexBuffer(*environment->CurrentCmdBuffer(), *cur_mesh.indices, 0, VK_INDEX_TYPE_UINT16);
 			vkCmdDrawIndexed(*environment->CurrentCmdBuffer(), cur_mesh.indicesSize, 1, 0, 0, 0);
 		}

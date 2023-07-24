@@ -125,7 +125,7 @@ namespace Renderer
 			ErrorCode CheckSwapChain(std::vector<Renderer::RenderPass*> render_passes);
 			ErrorCode PrepareNextFrame();
 			void BeginFrameCommands();
-			void BeginRenderPass(const Renderer::RenderPass* render_pass, int32_t side_buffer_index = -1);
+			void BeginRenderPass(const Renderer::RenderPass* render_pass, int32_t side_buffer_index = -1, uint32_t targetWidth = 0, uint32_t targetHeight = 0);
 			void EndRenderPass();
 			void EndFrameCommands();
 			ErrorCode Present();

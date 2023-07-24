@@ -138,10 +138,12 @@ namespace Renderer
 			void CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline);
 			void CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end);
 
-			void SortTransparentGeometry(glm::vec3 lightPosition, glm::vec3 cameraPosition);
+			void SortTransparentGeometry(glm::vec3 lightPosition, glm::vec3 cameraPosition, bool sortLight = true, bool sortCamera = true);
 
 			void CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
 			void CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
+			void CmdDrawTransparentLightFrontToBack_DepthOnly(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
+			void CmdDrawTransparentLightFrontToBack_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
 			void CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
 			void CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
 	};

@@ -57,7 +57,8 @@ namespace Renderer
 			if (_initData.renderTarget == RenderTarget::PRESENT)
 				attachments[curAttachInd].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			else if (_initData.renderTarget == RenderTarget::TEXTURE_GEOMETRY ||
-				_initData.renderTarget == RenderTarget::TEXTURE_POST_PROC)
+				_initData.renderTarget == RenderTarget::TEXTURE_POST_PROC ||
+				_initData.renderTarget == RenderTarget::TEXTURE_COLORDEPTH)
 				attachments[curAttachInd].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 			colourInd = curAttachInd;

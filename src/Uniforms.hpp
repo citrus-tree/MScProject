@@ -96,7 +96,7 @@ namespace Renderer
 				}
 
 			public:
-				void Set(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance = 1000.0f, float shadowDistance = 0.0f);
+				void Update(const ViewerCamera* camera, const LightData::DirectionalLight* sunLight, float bufferDistance = 1000.0f, float shadowDistance = 0.0f);
 		};
 	}
 }
