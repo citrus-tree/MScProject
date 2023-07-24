@@ -269,7 +269,7 @@ namespace Renderer
 		/* this calculates the average position of the vertices in the given mesh position data.
 			earlier in development this was used instead of the center of the bounding box. */
 
-		int pointSize = bufferView->byteLength / static_cast<int>(accessor->count);
+		int pointSize = static_cast<int>(bufferView->byteLength / accessor->count);
 		int elementSize = pointSize / 3;
 
 		glm::vec3 runningAverage = glm::vec3(0);

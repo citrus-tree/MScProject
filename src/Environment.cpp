@@ -631,190 +631,199 @@ namespace Renderer
 		return &_window;
 	}
 
-	uint32_t Environment::CreateSideBuffers(Renderer::RenderPass* render_pass, uint32_t count, SideBufferType type)
+	uint32_t Environment::CreateSideBuffers(
+		Renderer::RenderPass* render_pass,
+		uint32_t count,
+		SideBufferType type,
+		bool sharedBuffers,
+		SideBufferShareData* shareData,
+		int Width,
+		int Height)
 	{
 		assert(count > 0);
+		assert((sharedBuffers) ? (shareData != nullptr) : true);
+
+		uint32_t width = (Width >= 0) ? Width : _window.swapchainExtent.width;
+		uint32_t height = (Height >= 0) ? Height : _window.swapchainExtent.width;
+		VkExtent2D resolution = { width, height };
+
 		uint32_t ret = static_cast<uint32_t>(_sideBufferViews.size());
 
 		for (uint32_t i = 0; i < count; i++)
 		{
-			if (type == SideBufferType::COLOUR)
+			/* stores views to be used as framebuffer attachments (could be new or copied from existing buffers) */
+			std::vector<VkImageView> views = {};
+
+			/* make a new vector for new images and image views */
+			_sideBuffers.push_back({});
+			_sideBufferViews.push_back({});
+
+			if (type == SideBufferType::COLOUR || type == SideBufferType::COMBINED)
 			{
-				/* create COLOUR image and image view */
-				VkImageCreateInfo imageInfo{};
-				imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-				imageInfo.imageType = VK_IMAGE_TYPE_2D;
-				imageInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-				imageInfo.extent.width = _window.swapchainExtent.width;
-				imageInfo.extent.height = _window.swapchainExtent.height;
-				imageInfo.extent.depth = 1;
-				imageInfo.mipLevels = 1;
-				imageInfo.arrayLayers = 1;
-				imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-				imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-				imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-				imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-				imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-				VmaAllocationCreateInfo allocInfo{};
-				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-				VkImage image = VK_NULL_HANDLE;
-				VmaAllocation allocation = VK_NULL_HANDLE;
-
-				if (const auto& res = vmaCreateImage(_allocator.allocator, &imageInfo, &allocInfo, &image, &allocation, nullptr); VK_SUCCESS != res)
+				if (sharedBuffers == true && shareData->colourIndex != -1 && shareData->colourSubindex != -1)
 				{
-					throw lut::Error("VK: vmaCreateImage() failed while creating a deferred intermediate image. err: %s",
-						lut::to_string(res).c_str());
+					views.push_back(*GetSideBufferImageView(shareData->colourIndex)->at(shareData->colourSubindex));
 				}
-
-				lut::Image sideImage(_allocator.allocator, image, allocation);
-
-				VkImageViewCreateInfo viewInfo{};
-				viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-				viewInfo.image = sideImage.image;
-				viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-				viewInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-				viewInfo.components = VkComponentMapping
+				else
 				{
-					VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_COMPONENT_SWIZZLE_IDENTITY,
-					VK_COMPONENT_SWIZZLE_IDENTITY
-				};
-				viewInfo.subresourceRange = VkImageSubresourceRange
-				{
-					VK_IMAGE_ASPECT_COLOR_BIT,
-					0, 1,
-					0, 1
-				};
+					/* create COLOUR image and image view */
+					VkImageCreateInfo imageInfo{};
+					imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+					imageInfo.imageType = VK_IMAGE_TYPE_2D;
+					imageInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
+					imageInfo.extent.width = _window.swapchainExtent.width;
+					imageInfo.extent.height = _window.swapchainExtent.height;
+					imageInfo.extent.depth = 1;
+					imageInfo.mipLevels = 1;
+					imageInfo.arrayLayers = 1;
+					imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+					imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+					imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+					imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+					imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-				VkImageView view = VK_NULL_HANDLE;
-				if (const auto& res = vkCreateImageView(_window.device, &viewInfo, nullptr, &view); res != VK_SUCCESS)
-				{
-					throw lut::Error("VK: vkCreateImageView() failed to create an image view for a side image. err: %s",
-						lut::to_string(res).c_str());
+					VmaAllocationCreateInfo allocInfo{};
+					allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+					VkImage image = VK_NULL_HANDLE;
+					VmaAllocation allocation = VK_NULL_HANDLE;
+
+					if (const auto& res = vmaCreateImage(_allocator.allocator, &imageInfo, &allocInfo, &image, &allocation, nullptr); VK_SUCCESS != res)
+					{
+						throw lut::Error("VK: vmaCreateImage() failed while creating a deferred intermediate image. err: %s",
+							lut::to_string(res).c_str());
+					}
+
+					lut::Image sideImage(_allocator.allocator, image, allocation);
+
+					VkImageViewCreateInfo viewInfo{};
+					viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+					viewInfo.image = sideImage.image;
+					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+					viewInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
+					viewInfo.components = VkComponentMapping
+					{
+						VK_COMPONENT_SWIZZLE_IDENTITY,
+						VK_COMPONENT_SWIZZLE_IDENTITY,
+						VK_COMPONENT_SWIZZLE_IDENTITY,
+						VK_COMPONENT_SWIZZLE_IDENTITY
+					};
+					viewInfo.subresourceRange = VkImageSubresourceRange
+					{
+						VK_IMAGE_ASPECT_COLOR_BIT,
+						0, 1,
+						0, 1
+					};
+
+					VkImageView view = VK_NULL_HANDLE;
+					if (const auto& res = vkCreateImageView(_window.device, &viewInfo, nullptr, &view); res != VK_SUCCESS)
+					{
+						throw lut::Error("VK: vkCreateImageView() failed to create an image view for a side image. err: %s",
+							lut::to_string(res).c_str());
+					}
+
+					_sideBuffers.back().push_back(std::move(sideImage));
+					_sideBufferViews.back().push_back(lut::ImageView(_window.device, view));
+
+					views.push_back(view);
 				}
-
-				_sideBuffers.push_back(std::move(sideImage));
-				_sideBufferViews.push_back(lut::ImageView(_window.device, view));
-
-				/* Create the frambuffer */
-				VkImageView attachments[1]
-				{
-					*_sideBufferViews[i]
-				};
-
-				VkFramebufferCreateInfo fbInfo{};
-				fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-				fbInfo.flags = 0;
-				fbInfo.renderPass = **render_pass;
-				fbInfo.attachmentCount = 1;
-				fbInfo.pAttachments = attachments;
-				fbInfo.width = _window.swapchainExtent.width;
-				fbInfo.height = _window.swapchainExtent.height;
-				fbInfo.layers = 1;
-
-				VkFramebuffer framebuffer = VK_NULL_HANDLE;
-				if (const auto& res = vkCreateFramebuffer(_window.device, &fbInfo, nullptr, &framebuffer); res != VK_SUCCESS)
-				{
-					throw lut::Error("VK: vkCreateFramebuffer() failed to create side framebuffer. err: %s",
-						lut::to_string(res).c_str());
-				}
-
-				_sideFramebuffers.push_back(lut::Framebuffer(_window.device, framebuffer));
 			}
-			else if (type == SideBufferType::DEPTH)
+			else if (type == SideBufferType::DEPTH || type == SideBufferType::COMBINED)
 			{
-				/* create DEPTH image and image view */
-				VkImageCreateInfo imageInfo{};
-				imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-				imageInfo.imageType = VK_IMAGE_TYPE_2D;
-				imageInfo.format = VK_FORMAT_D32_SFLOAT;
-				imageInfo.extent.width = SHADOW_MAP_RESOLUTION;
-				imageInfo.extent.height = SHADOW_MAP_RESOLUTION;
-				imageInfo.extent.depth = 1;
-				imageInfo.mipLevels = 1;
-				imageInfo.arrayLayers = 1;
-				imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-				imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-				imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-				imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-				imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-				VmaAllocationCreateInfo allocInfo{};
-				allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-				VkImage image = VK_NULL_HANDLE;
-				VmaAllocation allocation = VK_NULL_HANDLE;
-
-				if (const auto& res = vmaCreateImage(_allocator.allocator, &imageInfo, &allocInfo, &image, &allocation, nullptr); VK_SUCCESS != res)
+				if (sharedBuffers == true && shareData->depthIndex != -1 && shareData->depthSubindex != -1)
 				{
-					throw lut::Error("VK: vmaCreateImage() failed while creating a depth buffer image. err: %s",
-						lut::to_string(res).c_str());
+					views.push_back(*GetSideBufferImageView(shareData->depthIndex)->at(shareData->depthSubindex));
 				}
-
-				lut::Image depthImage(_allocator.allocator, image, allocation);
-
-				VkImageViewCreateInfo viewInfo{};
-				viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-				viewInfo.image = depthImage.image;
-				viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-				viewInfo.format = VK_FORMAT_D32_SFLOAT;
-				viewInfo.components = VkComponentMapping{};
-				viewInfo.subresourceRange = VkImageSubresourceRange
+				else
 				{
-					VK_IMAGE_ASPECT_DEPTH_BIT,
-					0, 1,
-					0, 1
-				};
+					/* create DEPTH image and image view */
+					VkImageCreateInfo imageInfo{};
+					imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+					imageInfo.imageType = VK_IMAGE_TYPE_2D;
+					imageInfo.format = VK_FORMAT_D32_SFLOAT;
+					imageInfo.extent.width = SHADOW_MAP_RESOLUTION;
+					imageInfo.extent.height = SHADOW_MAP_RESOLUTION;
+					imageInfo.extent.depth = 1;
+					imageInfo.mipLevels = 1;
+					imageInfo.arrayLayers = 1;
+					imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+					imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+					imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+					imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+					imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-				VkImageView view = VK_NULL_HANDLE;
-				if (const auto& res = vkCreateImageView(_window.device, &viewInfo, nullptr, &view); res != VK_SUCCESS)
-				{
-					throw lut::Error("VK: vkCreateImageView() failed to create an image view for a depth buffer image. err: %s",
-						lut::to_string(res).c_str());
+					VmaAllocationCreateInfo allocInfo{};
+					allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+					VkImage image = VK_NULL_HANDLE;
+					VmaAllocation allocation = VK_NULL_HANDLE;
+
+					if (const auto& res = vmaCreateImage(_allocator.allocator, &imageInfo, &allocInfo, &image, &allocation, nullptr); VK_SUCCESS != res)
+					{
+						throw lut::Error("VK: vmaCreateImage() failed while creating a depth buffer image. err: %s",
+							lut::to_string(res).c_str());
+					}
+
+					lut::Image depthImage(_allocator.allocator, image, allocation);
+
+					VkImageViewCreateInfo viewInfo{};
+					viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+					viewInfo.image = depthImage.image;
+					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+					viewInfo.format = VK_FORMAT_D32_SFLOAT;
+					viewInfo.components = VkComponentMapping{};
+					viewInfo.subresourceRange = VkImageSubresourceRange
+					{
+						VK_IMAGE_ASPECT_DEPTH_BIT,
+						0, 1,
+						0, 1
+					};
+
+					VkImageView view = VK_NULL_HANDLE;
+					if (const auto& res = vkCreateImageView(_window.device, &viewInfo, nullptr, &view); res != VK_SUCCESS)
+					{
+						throw lut::Error("VK: vkCreateImageView() failed to create an image view for a depth buffer image. err: %s",
+							lut::to_string(res).c_str());
+					}
+
+					_sideBuffers.back().push_back(std::move(depthImage));
+					_sideBufferViews.back().push_back(lut::ImageView(_window.device, view));
+
+					views.push_back(view);
 				}
-
-				_sideBuffers.push_back(std::move(depthImage));
-				_sideBufferViews.push_back(lut::ImageView(_window.device, view));
-
-				/* Create the frambuffer */
-				VkImageView attachments[1]
-				{
-					*_sideBufferViews[i]
-				};
-
-				VkFramebufferCreateInfo fbInfo{};
-				fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-				fbInfo.flags = 0;
-				fbInfo.renderPass = **render_pass;
-				fbInfo.attachmentCount = 1;
-				fbInfo.pAttachments = attachments;
-				fbInfo.width = SHADOW_MAP_RESOLUTION;
-				fbInfo.height = SHADOW_MAP_RESOLUTION;
-				fbInfo.layers = 1;
-
-				VkFramebuffer framebuffer = VK_NULL_HANDLE;
-				if (const auto& res = vkCreateFramebuffer(_window.device, &fbInfo, nullptr, &framebuffer); res != VK_SUCCESS)
-				{
-					throw lut::Error("VK: vkCreateFramebuffer() failed to create side framebuffer. err: %s",
-						lut::to_string(res).c_str());
-				}
-
-				_sideFramebuffers.push_back(lut::Framebuffer(_window.device, framebuffer));
 			}
+
+			/* Create the frambuffer */
+
+			VkFramebufferCreateInfo fbInfo{};
+			fbInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			fbInfo.flags = 0;
+			fbInfo.renderPass = **render_pass;
+			fbInfo.attachmentCount = static_cast<uint32_t>(views.size());
+			fbInfo.pAttachments = views.data();
+			fbInfo.width = resolution.width;
+			fbInfo.height = resolution.width;
+			fbInfo.layers = 1;
+
+			VkFramebuffer framebuffer = VK_NULL_HANDLE;
+			if (const auto& res = vkCreateFramebuffer(_window.device, &fbInfo, nullptr, &framebuffer); res != VK_SUCCESS)
+			{
+				throw lut::Error("VK: vkCreateFramebuffer() failed to create side framebuffer. err: %s",
+					lut::to_string(res).c_str());
+			}
+
+			_sideFramebuffers.push_back(lut::Framebuffer(_window.device, framebuffer));
 		}
 
 		return ret;
 	}
-	lut::Image* Environment::GetSideBufferImage(uint32_t index)
+	std::vector<lut::Image>* Environment::GetSideBufferImage(uint32_t index)
 	{
 		assert(index < _sideBufferViews.size());
 
 		return &_sideBuffers[index];
 	}
-	lut::ImageView* Environment::GetSideBufferImageView(uint32_t index)
+	std::vector<lut::ImageView>* Environment::GetSideBufferImageView(uint32_t index)
 	{
 		assert(index < _sideBufferViews.size());
 

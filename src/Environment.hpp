@@ -21,6 +21,15 @@ namespace Renderer
 {
 	namespace lut = labutils;
 
+	struct SideBufferShareData
+	{
+		int colourIndex = -1;
+		int colourSubindex = -1;
+
+		int depthIndex = -1;
+		int depthSubindex = -1;
+	};
+
 	class Environment
 	{
 		public:
@@ -76,8 +85,8 @@ namespace Renderer
 			bool _intermediatesPrimed = false;
 			FirstFrameStrat* _frameStrat;
 
-			std::vector<lut::Image> _sideBuffers{};
-			std::vector<lut::ImageView> _sideBufferViews{};
+			std::vector<std::vector<lut::Image>> _sideBuffers{};
+			std::vector<std::vector<lut::ImageView>> _sideBufferViews{};
 
 			lut::Sampler _intermediateSampler{};
 			DescriptorSetLayoutFeatures _postPresentLayoutData{};
@@ -106,7 +115,8 @@ namespace Renderer
 			enum class SideBufferType
 			{
 				COLOUR = 0,
-				DEPTH
+				DEPTH,
+				COMBINED
 			};
 
 			/* public member functions */
@@ -123,9 +133,16 @@ namespace Renderer
 			void CmdPrimeIntermediates();
 			void CmdSwapIntermediates();
 
-			uint32_t CreateSideBuffers(Renderer::RenderPass* render_pass, uint32_t count = 1, SideBufferType type = SideBufferType::COLOUR);
-			lut::Image* GetSideBufferImage(uint32_t index);
-			lut::ImageView* GetSideBufferImageView(uint32_t index);
+			uint32_t CreateSideBuffers(
+				Renderer::RenderPass* render_pass,
+				uint32_t count = 1,
+				SideBufferType type = SideBufferType::COLOUR,
+				bool sharedBuffers = false,
+				SideBufferShareData* shareData = nullptr,
+				int Width = -1,
+				int Height = -1);
+			std::vector<lut::Image>* GetSideBufferImage(uint32_t index);
+			std::vector<lut::ImageView>* GetSideBufferImageView(uint32_t index);
 
 			/* getters */
 

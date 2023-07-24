@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 
 	/* create image buffers for the shadow maps */
 	uint32_t shadowMapStartIndex = env.CreateSideBuffers(&shadowPass, 1, Renderer::Environment::SideBufferType::DEPTH);
-	lut::ImageView* shadowMapView = env.GetSideBufferImageView(shadowMapStartIndex);
+	lut::ImageView* shadowMapView = &(*env.GetSideBufferImageView(shadowMapStartIndex))[0];
 
 	lut::Buffer shadowMapProjUBO = lut::create_buffer(env.Allocator(), sizeof(Renderer::Uniforms::DirectionalShadowData),
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
@@ -239,9 +239,9 @@ int main(int argc, char** argv)
 		if (firstFrame)
 		{
 			firstFrame = false;
-			Renderer::CmdPrimeImageForRead(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
+			Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(shadowMapStartIndex))[0], true);
 		}
-		Renderer::CmdTransitionForWrite(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
+		Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(shadowMapStartIndex))[0], true);
 
 		/* Begin shadow map pass */
 		env.BeginRenderPass(&shadowPass, shadowMapStartIndex); /* rendering to shadow map 0 */
@@ -257,7 +257,7 @@ int main(int argc, char** argv)
 		env.EndRenderPass();
 
 		/* Set the shadow map texture for reading */
-		Renderer::CmdTransitionForRead(&env, env.GetSideBufferImage(shadowMapStartIndex), true);
+		Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapStartIndex))[0], true);
 
 		/* Begin geometry pass */
 		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
