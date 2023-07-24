@@ -22,6 +22,9 @@ namespace Renderer
 namespace tinygltf
 {
 	class Model;
+	struct Accessor;
+	struct BufferView;
+	struct Buffer;
 }
 
 namespace Renderer
@@ -94,6 +97,8 @@ namespace Renderer
 				uint32_t indicesSize = 0;
 				DescriptorSet* descriptorSet{};
 
+				glm::vec3 centerPt = glm::vec3(0);
+
 				int materialIndex = -1;
 			};
 
@@ -103,6 +108,8 @@ namespace Renderer
 
 			std::vector<int> _opaqueMeshes{};
 			std::vector<int> _transparentMeshes{};
+			std::vector<int> _transparentMeshesSortedClosestToLight{};
+			std::vector<int> _transparentMeshesSortedFarthestFromCamera{};
 			tinygltf::Model* _model = nullptr;
 
 			/* private member functions */
@@ -113,7 +120,12 @@ namespace Renderer
 				const DescriptorSetLayout* descLayout,
 				const lut::Sampler* sampler);
 
+			glm::vec3 calculateAveragePoint(const tinygltf::Accessor* accessor,
+				const tinygltf::BufferView* bufferView,
+				tinygltf::Buffer* buffer);
+
 			public:
+
 			/* public member functions */
 
 			void CmdDrawOpaque(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
@@ -125,5 +137,12 @@ namespace Renderer
 			void CmdDrawTransparent(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
 			void CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline);
 			void CmdDrawTransparent_DepthOnly(Environment* environment, Pipeline* pipeline, size_t start, size_t end);
+
+			void SortTransparentGeometry(glm::vec3 lightPosition, glm::vec3 cameraPosition);
+
+			void CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
+			void CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
+			void CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
+			void CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
 	};
 }

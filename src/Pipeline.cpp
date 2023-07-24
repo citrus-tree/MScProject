@@ -214,9 +214,37 @@ namespace Renderer
 		/* Depth Stencil Settings */
 		VkPipelineDepthStencilStateCreateInfo depthInfo{};
 		depthInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depthInfo.depthWriteEnable = VK_TRUE;
-		depthInfo.depthTestEnable = VK_TRUE;
-		depthInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+
+		if (_epRenderPass->Features().depthTest == DepthTest::ENABLED && _initData.depthTest == DepthTest::ENABLED)
+		{
+			depthInfo.depthWriteEnable = (_initData.depthWrite == DepthWrite::ENABLED);
+			depthInfo.depthTestEnable = VK_TRUE;
+
+			switch(_initData.depthOp)
+			{
+				case DepthOp::LEQUAL:
+					depthInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+					break;
+
+				case DepthOp::GEQUAL:
+					depthInfo.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+					break;
+
+				case DepthOp::LESS:
+					depthInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+					break;
+
+				case DepthOp::GREATER:
+					depthInfo.depthCompareOp = VK_COMPARE_OP_GREATER;
+					break;
+			}
+		}
+		else
+		{
+			depthInfo.depthWriteEnable = VK_FALSE;
+			depthInfo.depthTestEnable = VK_FALSE;
+		}
+
 		depthInfo.minDepthBounds = 0.0f;
 		depthInfo.maxDepthBounds = 1.0f;
 

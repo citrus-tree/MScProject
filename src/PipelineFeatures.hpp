@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SharedFeatures.hpp"
+
 namespace Renderer
 {
 	/* Pipeline Types and Data */
@@ -28,12 +30,29 @@ namespace Renderer
 		SHADOW_MAP
 	};
 
+	enum class DepthWrite
+	{
+		ENABLED = 0,
+		DISABLED
+	};
+
+	enum class DepthOp
+	{
+		LEQUAL = 0,
+		GEQUAL,
+		LESS,
+		GREATER
+	};
+
 	struct PipelineFeatures
 	{
 		AlphaBlend alphaBlend{};
 		FillMode fillMode{};
 		FragmentMode fragmentMode{};
 		SpecialMode specialMode{};
+		DepthWrite depthWrite{};
+		DepthTest depthTest{};
+		DepthOp depthOp{};
 		std::vector<uint32_t> sideBuffers{};
 	};
 
@@ -44,6 +63,9 @@ namespace Renderer
 		FillMode::FILL,
 		FragmentMode::SIMPLE,
 		SpecialMode::NONE,
+		DepthWrite::ENABLED,
+		DepthTest::ENABLED,
+		DepthOp::LEQUAL,
 		{}
 	};
 }

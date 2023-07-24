@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SharedFeatures.hpp"
+
 namespace Renderer
 {
 	/* Render Pass Types and Data */
@@ -10,18 +12,13 @@ namespace Renderer
 		ENABLED
 	};
 
-	enum class DepthTest
-	{
-		DISABLED = 0, // currently setting this to disabled works, but causes warnings
-		ENABLED
-	};
-
 	enum class RenderTarget
 	{
 		PRESENT = 0,
 		TEXTURE_GEOMETRY,
 		TEXTURE_POST_PROC,
-		TEXTURE_SHADOWMAP
+		TEXTURE_SHADOWMAP,
+		TEXTURE_COLORDEPTH
 	};
 
 	struct RenderPassFeatures

@@ -47,7 +47,7 @@ namespace Renderer
 
 			/* transform the points into world space */
 			for (size_t i = 0; i < cameraLocalPoints.size(); i++)
-				worldPoints.push_back(cameraLocalPoints[i]);
+				worldPoints.push_back(glm::vec4(cameraLocalPoints[i], 1.0f) * camera->InvView());
 
 			/* calculate the camera orientation min and max */
 

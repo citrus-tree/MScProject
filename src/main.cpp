@@ -36,7 +36,7 @@ namespace lut = labutils;
 #include "TextureUtilities.hpp"
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
-const float FarClipDist = 20.0f;
+const float FarClipDist = 40.0f;
 const float ShadowBufferDistance = 100.0f;
 
 int main(int argc, char** argv)
@@ -160,6 +160,7 @@ int main(int argc, char** argv)
 
 	/* load model */
 	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
+	model.SortTransparentGeometry(-lights.sunLight.direction * 9999.9f, camera.Position());
 
 	/* Pipelines and Dependencies */
 	std::vector<const VkDescriptorSetLayout*> simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*shadowMapLayout };
@@ -167,6 +168,8 @@ int main(int argc, char** argv)
 	
 	Renderer::PipelineFeatures transparentFeatures = Renderer::Pipeline_Default;
 	transparentFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
+	transparentFeatures.depthTest = Renderer::DepthTest::ENABLED;
+	transparentFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
 	Renderer::Pipeline transparentPipeline(&env, transparentFeatures, &simpleOpaquePass, simpleLayouts);
 
 	std::vector<const VkDescriptorSetLayout*> postProcessingLayouts = { &*singleTextureLayout };
@@ -274,7 +277,7 @@ int main(int argc, char** argv)
 			cameraSet.CmdBind(&env, &transparentPipeline, 0);
 			lightingSet.CmdBind(&env, &transparentPipeline, 2);
 			shadowMapSet.CmdBind(&env, &transparentPipeline, 3);
-			model.CmdDrawTransparent(&env, &transparentPipeline);
+			model.CmdDrawTransparentCameraBackToFront(&env, &transparentPipeline);
 		}
 
 		/* End render pass */

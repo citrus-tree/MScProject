@@ -3,7 +3,7 @@
 float eps = 0.0001;
 float pi = 3.141592;
 
-float normal_bias = 0.02;
+float normal_bias = 0.035;
 
 /* Here be data */
 

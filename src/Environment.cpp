@@ -421,9 +421,14 @@ namespace Renderer
 		if (render_pass->Features().colourPass == ColourPass::ENABLED)
 		{
 			clearValues.push_back({});
-			clearValues.back().color.float32[0] = 0.53f;
+			/*clearValues.back().color.float32[0] = 0.53f;
 			clearValues.back().color.float32[1] = 0.81f;
 			clearValues.back().color.float32[2] = 0.92f;
+			clearValues.back().color.float32[3] = 1.0f;*/
+
+			clearValues.back().color.float32[0] = 1.0f;
+			clearValues.back().color.float32[1] = 1.0f;
+			clearValues.back().color.float32[2] = 1.0f;
 			clearValues.back().color.float32[3] = 1.0f;
 		}
 

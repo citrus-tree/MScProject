@@ -86,6 +86,9 @@
     <ClCompile Include="Uniforms.cpp">
       <Filter>src\Renderer\Misc</Filter>
     </ClCompile>
+    <ClCompile Include="SharedFeatures.hpp">
+      <Filter>src\Renderer\Misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DescriptorSet.hpp">
