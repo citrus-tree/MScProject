@@ -189,5 +189,14 @@
     <None Include="..\res\shaders\TS_colouredShadowPass.vert">
       <Filter>res\shaders</Filter>
     </None>
+    <None Include="..\res\shaders\SSM_shadowPass.frag">
+      <Filter>res\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\SSM_shadowPass.vert">
+      <Filter>res\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\SSM_defaultPCF.frag">
+      <Filter>res\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

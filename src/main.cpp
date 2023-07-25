@@ -37,10 +37,11 @@ namespace lut = labutils;
 #include "TextureUtilities.hpp"
 
 #define VANILLA 0
-#define TRANSLUCENT_SHADOWS 1
+#define TRANSLUCENT_SHADOWS 0
+#define SSM 1
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
-const float FarClipDist = 32.0f;
+const float FarClipDist = 24.0f;
 const float ShadowBufferDistance = 100.0f;
 
 int main(int argc, char** argv)
@@ -268,6 +269,36 @@ int main(int argc, char** argv)
 		Renderer::Pipeline TS_transparentPipeline(&env, TS_transparentFeatures, &simpleOpaquePass, TS_transparentPipelineLayouts);
 	#endif
 
+	#if SSM
+		lut::Image noiseImage = lut::load_image_texture2d("../res/images/rgb_noise_2048.png",
+			env.Window(), *env.CommandPool(), env.Allocator(), VK_FORMAT_R8G8B8A8_UNORM);
+		lut::ImageView noiseView = Renderer::CreateImageView(&env, *noiseImage, VK_FORMAT_R8G8B8A8_UNORM);
+
+		Renderer::DescriptorSetLayoutFeatures SSM_noiseTextureLayoutData{};
+		SSM_noiseTextureLayoutData.stages.fragment = true;
+		SSM_noiseTextureLayoutData.bindingCount = 1;
+		Renderer::DescriptorSetType SSM_noiseTextureTypes = Renderer::DescriptorSetType::SAMPLER;
+		SSM_noiseTextureLayoutData.pBindingTypes = &SSM_noiseTextureTypes;
+		Renderer::DescriptorSetLayout SSM_noiseTextureLayout(&env, SSM_noiseTextureLayoutData);
+
+		Renderer::DescriptorSet noiseTextureSet(&env, &singleTextureLayout, *noiseView, *defaultSampler);
+
+		std::vector<const VkDescriptorSetLayout*> SSM_shadowLayouts = { &*shadowMapProjSetLayout, &*simpleLayout, &*SSM_noiseTextureLayout };
+		Renderer::PipelineFeatures SSM_shadowPipelineFeatures;
+		SSM_shadowPipelineFeatures.alphaBlend = Renderer::AlphaBlend::DISABLED;
+		SSM_shadowPipelineFeatures.fillMode = Renderer::FillMode::FILL;
+		SSM_shadowPipelineFeatures.specialMode = Renderer::SpecialMode::SSM_STOCHASTIC_SHADOW_MAP;
+		Renderer::Pipeline SSM_shadowPipeline(&env, SSM_shadowPipelineFeatures, &shadowPass, SSM_shadowLayouts);
+
+		Renderer::PipelineFeatures SMM_defaultFeatures = Renderer::Pipeline_Default;
+		SMM_defaultFeatures.specialMode = Renderer::SpecialMode::SSM_DEFAULT_BIG_PCF;
+		Renderer::Pipeline SSM_defaultPipeline(&env, SMM_defaultFeatures, &simpleOpaquePass, simpleLayouts);
+
+		Renderer::PipelineFeatures SSM_transparentFeatures = transparentFeatures;
+		SSM_transparentFeatures.specialMode = Renderer::SpecialMode::SSM_DEFAULT_BIG_PCF;
+		Renderer::Pipeline SSM_transparentPipeline(&env, SSM_transparentFeatures, &simpleOpaquePass, simpleLayouts);
+	#endif
+
 	/* Main loop */
 	double time = glfwGetTime();
 	bool firstFrame = true;
@@ -345,17 +376,28 @@ int main(int argc, char** argv)
 		env.BeginRenderPass(&shadowPass, shadowMapIndex); /* rendering to the opaque shadow map */
 
 		{
-			/* opaque meshes */
-			shadowPipeline.CmdBind(&env);
-			shadowMapProjSet.CmdBind(&env, &shadowPipeline, 0);
-			model.CmdDrawOpaque_DepthOnly(&env, &shadowPipeline);
+			#if VANILLA or TRANSLUCENT_SHADOWS
+				/* opaque meshes */
+				shadowPipeline.CmdBind(&env);
+				shadowMapProjSet.CmdBind(&env, &shadowPipeline, 0);
+				model.CmdDrawOpaque_DepthOnly(&env, &shadowPipeline);
+			#endif
+
+			#if SSM
+				/* all meshes */
+				SSM_shadowPipeline.CmdBind(&env);
+				shadowMapProjSet.CmdBind(&env, &SSM_shadowPipeline, 0);
+				noiseTextureSet.CmdBind(&env, &SSM_shadowPipeline, 2);
+				model.CmdDrawOpaque(&env, &SSM_shadowPipeline);
+				model.CmdDrawTransparent(&env, &SSM_shadowPipeline);
+			#endif
 		}
 
 		/* End render pass */
 		env.EndRenderPass();
 
 		/* Set the opaque shadow map texture for reading */
-		#if VANILLA 
+		#if VANILLA or SSM
 			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 		#endif
 
@@ -394,15 +436,18 @@ int main(int argc, char** argv)
 
 			/* TRANSLUCENT SHADOWS: Set the translucent shadow colour texture for reading */
 			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
+
+			/* Set the opaque shadow map texture for reading */
+			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 		#endif
 
-		#if VANILLA
-			/* Begin geometry pass */
-			env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
+		/* Begin geometry pass */
+		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
 
-			{
-				/* Draw meshes */
+		{
+			/* Draw meshes */
 
+			#if VANILLA
 				/* opaque geometry */
 				simplePipeline.CmdBind(&env);
 				cameraSet.CmdBind(&env, &simplePipeline, 0);
@@ -416,22 +461,9 @@ int main(int argc, char** argv)
 				lightingSet.CmdBind(&env, &transparentPipeline, 2);
 				shadowMapSet.CmdBind(&env, &transparentPipeline, 3);
 				model.CmdDrawTransparentCameraBackToFront(&env, &transparentPipeline);
-			}
+			#endif
 
-			/* End render pass */
-			env.EndRenderPass();
-		#endif
-
-		#if TRANSLUCENT_SHADOWS
-			/* Set the opaque shadow map texture for reading */
-			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
-
-			/* Begin geometry pass */
-			env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
-
-			{
-				/* Draw meshes */
-
+			#if TRANSLUCENT_SHADOWS
 				/* opaque geometry */
 				TS_geometryPipeline.CmdBind(&env);
 				cameraSet.CmdBind(&env, &TS_geometryPipeline, 0);
@@ -445,11 +477,27 @@ int main(int argc, char** argv)
 				lightingSet.CmdBind(&env, &TS_transparentGeometryPipeline, 2);
 				TS_shadowMapSet.CmdBind(&env, &TS_transparentGeometryPipeline, 3);
 				model.CmdDrawTransparentCameraBackToFront(&env, &TS_transparentGeometryPipeline);
-			}
+			#endif
 
-			/* End render pass */
-			env.EndRenderPass();
-		#endif
+			#if SSM
+				/* opaque geometry */
+				SSM_defaultPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &SSM_defaultPipeline, 0);
+				lightingSet.CmdBind(&env, &SSM_defaultPipeline, 2);
+				shadowMapSet.CmdBind(&env, &SSM_defaultPipeline, 3);
+				model.CmdDrawOpaque(&env, &SSM_defaultPipeline);
+
+				/* transparent geometry */
+				SSM_transparentPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &SSM_transparentPipeline, 0);
+				lightingSet.CmdBind(&env, &SSM_transparentPipeline, 2);
+				shadowMapSet.CmdBind(&env, &SSM_transparentPipeline, 3);
+				model.CmdDrawTransparentCameraBackToFront(&env, &SSM_transparentPipeline);
+			#endif
+		}
+
+		/* End render pass */
+		env.EndRenderPass();
 
 		/* Swap the intermediate images */
 		env.CmdSwapIntermediates(); /* 0 -> 1 */

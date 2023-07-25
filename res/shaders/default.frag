@@ -26,7 +26,7 @@ layout(set = 1, binding = 1) uniform sampler2D UMetallicRoughnessTex;
 
 layout(set = 1, binding = 2) uniform MaterialData
 {
-	vec4 abledo;
+	vec4 albedo;
 	vec3 emissive;
 	float roughness;
 	vec3 transmission;

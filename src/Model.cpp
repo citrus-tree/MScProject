@@ -134,7 +134,7 @@ namespace Renderer
 
 			/* material data */
 			Renderer::Uniforms::SimpleMaterial& material = _materialData[m].data;
-			material.data.inner_data.abledo = 
+			material.data.inner_data.albedo = 
 				glm::vec4(
 					cur_material.pbrMetallicRoughness.baseColorFactor[0],
 					cur_material.pbrMetallicRoughness.baseColorFactor[1],
@@ -163,7 +163,7 @@ namespace Renderer
 		/* iterate through meshes */
 		_meshes.resize(0);
 		int offset = 0;
-		for (size_t m = 0; m < _model->materials.size(); m++)
+		for (size_t m = 0; m < _model->meshes.size(); m++)
 		{
 			const tinygltf::Mesh& mesh = _model->meshes[m];
 

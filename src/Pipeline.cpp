@@ -102,11 +102,21 @@ namespace Renderer
 					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
 					frag = load_shader_module(environment->Window(), "../res/shaders/" "TS_geometryPass.frag.spv");
 					break;
-
+					
 				case SpecialMode::TS_COLOURED_SHADOW_MAP:
-				default:
 					vert = load_shader_module(environment->Window(), "../res/shaders/" "TS_colouredShadowPass.vert.spv");
 					frag = load_shader_module(environment->Window(), "../res/shaders/" "TS_colouredShadowPass.frag.spv");
+					break;
+
+				case SpecialMode::SSM_STOCHASTIC_SHADOW_MAP:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "SSM_shadowPass.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "SSM_shadowPass.frag.spv");
+					break;
+
+				case SpecialMode::SSM_DEFAULT_BIG_PCF:
+				default:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "SSM_defaultPCF.frag.spv");
 					break;
 			}
 
@@ -162,7 +172,9 @@ namespace Renderer
 			vertexAttributes[1].format = VK_FORMAT_R32G32_SFLOAT;
 			vertexAttributes[1].offset = 0;
 
-			if (_initData.specialMode == SpecialMode::NONE || _initData.specialMode == SpecialMode::TS_GEOMETRY)
+			if (_initData.specialMode == SpecialMode::NONE ||
+				_initData.specialMode == SpecialMode::TS_GEOMETRY ||
+				_initData.specialMode == SpecialMode::SSM_DEFAULT_BIG_PCF)
 			{
 					/* Normals input info */
 				vertexInputs.push_back({});
@@ -198,7 +210,8 @@ namespace Renderer
 		viewport.y = 0.0f;
 		scissorRect.offset = VkOffset2D{ 0, 0 };
 		if (_initData.specialMode == SpecialMode::SHADOW_MAP ||
-			_initData.specialMode == SpecialMode::TS_COLOURED_SHADOW_MAP)
+			_initData.specialMode == SpecialMode::TS_COLOURED_SHADOW_MAP ||
+			_initData.specialMode == SpecialMode::SSM_STOCHASTIC_SHADOW_MAP)
 		{
 			viewport.width = SHADOW_MAP_RESOLUTION_F;
 			viewport.height = SHADOW_MAP_RESOLUTION_F;

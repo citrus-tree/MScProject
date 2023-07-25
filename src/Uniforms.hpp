@@ -67,7 +67,7 @@ namespace Renderer
 
 				struct SimpleMaterialData
 				{
-					glm::vec4 abledo;
+					glm::vec4 albedo;
 					glm::vec3 emissive;
 					float roughness;
 					glm::vec3 transmission;
