@@ -22,14 +22,14 @@ layout(set = 2, binding = 0) uniform sampler2D uNoiseTex;
 void main()
 {
 	/* perhaps make the method of sampling the noise better */
-	vec2 samplingUV = vec2(iPosition.x, iPosition.z);
-	float random = texture(uNoiseTex, samplingUV).r;
+	vec2 samplingUV = vec2(iPosition.x + iPosition.y, iPosition.z - iPosition.y);
+	float random = textureLod(uNoiseTex, samplingUV, 0).r;
 
 	/* calculate the fragment alpha */
 	float alpha = texture(uColourTex, iUV).a;
 
 	/* TODO: fix this implementation to use stratified sampling */
 	/* discard fragments that do not pass */
-	if (alpha <= random)
+	if (alpha < random)
 		discard;
 }

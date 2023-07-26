@@ -14,9 +14,10 @@
 
 namespace Renderer
 {
-
 	labutils::DescriptorPool CreateDescriptorPool(const VkDevice& logicalDevice, std::uint32_t maxDescriptors = 2048, std::uint32_t maxSets = 1024);
 
-	labutils::Sampler CreateDefaultSampler(const labutils::VulkanWindow& window, bool anisotropicFiltering = true, float anisotropy = 16.0f);
+	labutils::Sampler CreateDefaultSampler(const labutils::VulkanWindow& window,
+		VkFilter minFilter = VK_FILTER_LINEAR, VkFilter magFilter = VK_FILTER_LINEAR,
+		bool anisotropicFiltering = true, float anisotropy = 16.0f);
 	labutils::Sampler CreateDefaultShadowSampler(const labutils::VulkanWindow& window);
 }

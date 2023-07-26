@@ -94,15 +94,16 @@ vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metalli
 	float shadowStrength = 0.0;
 	float totalSamples = 0.0;
 	vec2 texelSize = vec2(textureSize(shadowMap, 0));
-	for (float u = -pcf_radius + 0.5; u < pcf_radius -0.04; u++)
+	for (float u = -pcf_radius + 0.5; u < pcf_radius -0.04; u += 0.5)
 	{
-		for (float v = -pcf_radius + 0.5; v < pcf_radius -0.04; v++)
+		for (float v = -pcf_radius + 0.5; v < pcf_radius -0.04; v += 0.5)
 		{
 			shadowStrength += textureProj(shadowMap, shadowCoords + vec4(u / texelSize.x, v / texelSize.y, 0.0, 0.0));
-			totalSamples += 1;
+			totalSamples += 1.0;
 		}
 	}
 	shadowStrength /= totalSamples;
+	// shadowStrength = textureProj(shadowMap, shadowCoords);
 
 	vec3 direct = lightingData.sunLight.colour.rgb * diffuse * shadowStrength;
 	vec3 ambient = lightingData.ambientLight.colour.rgb * diffuse;

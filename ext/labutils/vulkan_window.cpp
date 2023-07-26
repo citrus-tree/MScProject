@@ -204,7 +204,8 @@ namespace labutils
 		/* Disable window resize */
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-		ret.window = glfwCreateWindow(1080, 720, "Jaina's Window! :-) *** Hold [U] to move the light.", nullptr, nullptr);
+		ret.window = glfwCreateWindow(1080, 720, "Modisett MSc Project: "
+			"An Analysis of Shadow Mapping Techniques for Rendering Coloured Shadows", nullptr, nullptr);
 		if (ret.window == nullptr)
 		{
 			const char* err = nullptr;

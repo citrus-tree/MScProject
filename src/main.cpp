@@ -41,7 +41,7 @@ namespace lut = labutils;
 #define SSM 1
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
-const float FarClipDist = 24.0f;
+const float FarClipDist = 32.0f;
 const float ShadowBufferDistance = 100.0f;
 
 int main(int argc, char** argv)
@@ -87,13 +87,24 @@ int main(int argc, char** argv)
 
 		/* samplers */
 	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window());
+	lut::Sampler pointSampler = Renderer::CreateDefaultSampler(env.Window(), VK_FILTER_NEAREST, VK_FILTER_NEAREST);
 	lut::Sampler shadowSampler = Renderer::CreateDefaultShadowSampler(env.Window());
 
 	/* set up the camera */
 	Renderer::ViewerCamera camera(&env, FOV, 0.1f, FarClipDist,
 		env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
-	camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
-	camera.FrameUpdate(0.01f);
+	// camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
+	// camera.FrameUpdate(0.01f);
+
+	//*
+	camera.SetPosition(glm::vec3(10.090, -7.994, 5.043));
+	camera.SetOrientation(glm::vec2(274.000, 1083.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	/*
+	camera.SetPosition(glm::vec3(4.869, -2.837, 0.344));
+	camera.SetOrientation(glm::vec2(368.000, 907.000));
+	camera.FrameUpdate(0.01f);//*/
 
 	/* camera data uniform */
 	Renderer::DescriptorSetLayout cameraUniformLayout(&env, { true, true, false }, Renderer::DescriptorSetType::UNIFORM_BUFFER);
@@ -281,7 +292,7 @@ int main(int argc, char** argv)
 		SSM_noiseTextureLayoutData.pBindingTypes = &SSM_noiseTextureTypes;
 		Renderer::DescriptorSetLayout SSM_noiseTextureLayout(&env, SSM_noiseTextureLayoutData);
 
-		Renderer::DescriptorSet noiseTextureSet(&env, &singleTextureLayout, *noiseView, *defaultSampler);
+		Renderer::DescriptorSet noiseTextureSet(&env, &singleTextureLayout, *noiseView, *pointSampler);
 
 		std::vector<const VkDescriptorSetLayout*> SSM_shadowLayouts = { &*shadowMapProjSetLayout, &*simpleLayout, &*SSM_noiseTextureLayout };
 		Renderer::PipelineFeatures SSM_shadowPipelineFeatures;
@@ -302,10 +313,26 @@ int main(int argc, char** argv)
 	/* Main loop */
 	double time = glfwGetTime();
 	bool firstFrame = true;
+	bool printOutLastFrame = false;
 	while (glfwWindowShouldClose(env.Window().window) == false)
 	{
 		/* Window polling */
 		glfwPollEvents();
+
+		/* print camera position and direction */
+		if (glfwGetKey(env.Window().window, GLFW_KEY_P) == GLFW_PRESS)
+		{
+			if (printOutLastFrame == false)
+			{
+				camera.PrintPositionalData();
+			}
+
+			printOutLastFrame = true;
+		}
+		else
+		{
+			printOutLastFrame = false;
+		}
 
 		/* Recreate the swap chain if it's been invalidated.
 			This also necessitates adjusting the pipelines,
