@@ -114,9 +114,19 @@ namespace Renderer
 					break;
 
 				case SpecialMode::SSM_DEFAULT_BIG_PCF:
-				default:
 					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
 					frag = load_shader_module(environment->Window(), "../res/shaders/" "SSM_defaultPCF.frag.spv");
+					break;
+
+				case SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "SSM_shadowPass.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "CSSM_shadowPass.frag.spv");
+					break;
+
+				case SpecialMode::CSSM_DEFAULT:
+				default:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "CSSM_defaultPCF.frag.spv");
 					break;
 			}
 
@@ -174,7 +184,8 @@ namespace Renderer
 
 			if (_initData.specialMode == SpecialMode::NONE ||
 				_initData.specialMode == SpecialMode::TS_GEOMETRY ||
-				_initData.specialMode == SpecialMode::SSM_DEFAULT_BIG_PCF)
+				_initData.specialMode == SpecialMode::SSM_DEFAULT_BIG_PCF ||
+				_initData.specialMode == SpecialMode::CSSM_DEFAULT)
 			{
 					/* Normals input info */
 				vertexInputs.push_back({});
@@ -211,7 +222,8 @@ namespace Renderer
 		scissorRect.offset = VkOffset2D{ 0, 0 };
 		if (_initData.specialMode == SpecialMode::SHADOW_MAP ||
 			_initData.specialMode == SpecialMode::TS_COLOURED_SHADOW_MAP ||
-			_initData.specialMode == SpecialMode::SSM_STOCHASTIC_SHADOW_MAP)
+			_initData.specialMode == SpecialMode::SSM_STOCHASTIC_SHADOW_MAP ||
+			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP)
 		{
 			viewport.width = SHADOW_MAP_RESOLUTION_F;
 			viewport.height = SHADOW_MAP_RESOLUTION_F;

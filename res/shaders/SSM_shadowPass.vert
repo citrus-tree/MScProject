@@ -5,13 +5,13 @@ layout(location = 1) in vec2 iUV;
 
 layout(location = 0) out vec3 oPosition;
 layout(location = 1) out vec2 oUV;
-layout(location = 2) out vec2 oScreenPosition;
 
 layout(set = 0, binding = 0) uniform ShadowData
 {
 	mat4 view;
 	mat4 projection;
 	mat4 projView;
+	mat4 invView;
 } shadowData;
 
 void main()
@@ -19,8 +19,5 @@ void main()
 	oPosition = iPosition;
 	oUV = iUV;
 
-	vec4 vertexPosition = shadowData.projView * vec4(iPosition, 1.0f);
-	oScreenPosition = vec2(vertexPosition.x, vertexPosition.y) / vertexPosition.w;
-
-	gl_Position = vertexPosition;
+	gl_Position = shadowData.projView * vec4(iPosition, 1.0f);
 }

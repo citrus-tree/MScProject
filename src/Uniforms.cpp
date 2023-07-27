@@ -104,11 +104,9 @@ namespace Renderer
 				lightSpanZ + bufferDistance);
 
 			view = glm::lookAtRH(lightPosition, lightTarget, lightUp);
+			invView = glm::inverse(view);
 
 			projView = projection * view;
-
-			/* calculate the camera to shadow transform matrix */
-			cam2shadow = projView * camera->InvProjView();
 		}
 	}
 }

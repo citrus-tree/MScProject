@@ -60,6 +60,8 @@
     <ClInclude Include="Uniforms.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\res\shaders\CSSM_defaultPCF.frag" />
+    <None Include="..\res\shaders\CSSM_shadowPass.frag" />
     <None Include="..\res\shaders\default.frag" />
     <None Include="..\res\shaders\default.vert" />
     <None Include="..\res\shaders\fullscreen.vert" />

@@ -52,8 +52,9 @@ layout(set = 2, binding = 0) uniform LightData
 	AmbientLight ambientLight;
 } lightingData;
 
-layout(set = 3, binding = 0) uniform sampler2DShadow shadowMap;
-layout(set = 3, binding = 1) uniform DirectionalShadowData
+layout(set = 3, binding = 0) uniform sampler2DShadow shadowDepthMap;
+layout(set = 3, binding = 1) uniform sampler2D shadowColourMap;
+layout(set = 3, binding = 2) uniform DirectionalShadowData
 {
 	mat4 view;
 	mat4 projection;
@@ -92,20 +93,25 @@ vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metalli
 	shadowCoords.w = 1.0;
 
 	float shadowStrength = 0.0;
+	vec3 shadowColour = vec3(0.0, 0.0, 0.0);
 	float totalSamples = 0.0;
-	vec2 texelSize = vec2(textureSize(shadowMap, 0));
+	vec2 texelSize = vec2(textureSize(shadowDepthMap, 0));
 	for (float u = -pcf_radius; u < pcf_radius; u += 1.0)
 	{
 		for (float v = -pcf_radius; v < pcf_radius; v += 1.0)
 		{
-			shadowStrength += textureProj(shadowMap, shadowCoords + vec4(u / texelSize.x, v / texelSize.y, 0.0, 0.0));
+			shadowStrength += textureProj(shadowDepthMap, shadowCoords + vec4(u / texelSize.x, v / texelSize.y, 0.0, 0.0));
+			shadowColour += texture(shadowColourMap, shadowCoords.rg + vec2(u / texelSize.x, v / texelSize.y)).rgb;
 			totalSamples += 1.0;
 		}
 	}
 	shadowStrength /= totalSamples;
 	// shadowStrength = textureProj(shadowMap, shadowCoords); /* uncomment this line to ignore PCF calculation */
+	shadowColour /= totalSamples;
 
-	vec3 direct = lightingData.sunLight.colour.rgb * diffuse * shadowStrength;
+	vec3 direct = (lightingData.sunLight.colour.rgb * diffuse);
+	vec3 finalShadowColour = shadowColour + (direct - shadowColour) * shadowStrength;
+	direct = finalShadowColour + (direct - finalShadowColour) * shadowStrength;
 	vec3 ambient = lightingData.ambientLight.colour.rgb * diffuse;
 
 	return ambient + (posDot(normal, to_light)) * direct;

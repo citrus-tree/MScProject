@@ -539,7 +539,7 @@ namespace Renderer
 			ret = ErrorCode::FAILURE;
 			_swapState = SwapChainState::INVALID;
 		}
-		else if (presRes != VK_SUCCESS) // I guess the 'else' is a little unnecessary here...
+		else if (presRes != VK_SUCCESS)
 		{
 			throw lut::Error("VK: vkQueuePresentKHR() experienced an unrecoverable failure. err: %s",
 				lut::to_string(presRes));

@@ -59,7 +59,7 @@ layout(set = 3, binding = 3) uniform DirectionalShadowData
 	mat4 view;
 	mat4 projection;
 	mat4 projView;
-	mat4 cam2shadow;
+	mat4 invView;
 } shadowData;
 
 /* Helper functions */

@@ -83,7 +83,7 @@ namespace Renderer
 			glm::mat4 view = glm::mat4(1);
 			glm::mat4 projection = glm::mat4(1);
 			glm::mat4 projView = glm::mat4(1);
-			glm::mat4 cam2shadow = glm::mat4(1);
+			glm::mat4 invView = glm::mat4(1);
 
 			private:
 				inline float rightTriangleOpposite(float angleRadians, float adjacentSide)
