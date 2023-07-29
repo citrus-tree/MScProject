@@ -33,6 +33,7 @@ namespace Renderer
 		SSM_STOCHASTIC_SHADOW_MAP,
 		SSM_DEFAULT_BIG_PCF,
 		CSSM_COLORED_STOCHASTIC_SHADOW_MAP,
+		CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2,
 		CSSM_DEFAULT
 	};
 
@@ -50,6 +51,18 @@ namespace Renderer
 		GREATER
 	};
 
+	enum class ColorWrite
+	{
+		ENABLED = 0,
+		DISABLED
+	};
+
+	enum class BlendMode
+	{
+		ADD_SRC_ONEMINUSSRC = 0,
+		MIN_ONE_ONE
+	};
+
 	struct PipelineFeatures
 	{
 		AlphaBlend alphaBlend{};
@@ -59,6 +72,8 @@ namespace Renderer
 		DepthWrite depthWrite{};
 		DepthTest depthTest{};
 		DepthOp depthOp{};
+		ColorWrite colorWrite{};
+		BlendMode blendMode{};
 		std::vector<uint32_t> sideBuffers{};
 	};
 
@@ -72,6 +87,8 @@ namespace Renderer
 		DepthWrite::ENABLED,
 		DepthTest::ENABLED,
 		DepthOp::LEQUAL,
+		ColorWrite::ENABLED,
+		BlendMode::ADD_SRC_ONEMINUSSRC,
 		{}
 	};
 }

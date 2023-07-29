@@ -21,6 +21,12 @@ namespace Renderer
 		TEXTURE_COLORDEPTH
 	};
 
+	enum class SpecialColour
+	{
+		NONE = 0,
+		CSSM_SHADOWMAP
+	};
+
 	enum class ClearDepth
 	{
 		ENABLED = 0,
@@ -38,6 +44,7 @@ namespace Renderer
 		ColourPass colourPass{};
 		DepthTest depthTest{};
 		RenderTarget renderTarget{};
+		SpecialColour specialColour{};
 		ClearDepth clearDepth{};
 		ClearColour clearColour{};
 	};
@@ -48,6 +55,7 @@ namespace Renderer
 		ColourPass::ENABLED,
 		DepthTest::ENABLED,
 		RenderTarget::PRESENT,
+		SpecialColour::NONE,
 		ClearDepth::ENABLED,
 		ClearColour::ENABLED
 	};

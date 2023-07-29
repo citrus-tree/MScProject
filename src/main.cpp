@@ -83,6 +83,15 @@ int main(int argc, char** argv)
 		Renderer::RenderPass TS_translucentShadowPass(env.WindowPtr(), TS_translucentShadowPassFeatures);
 	#endif
 
+	#if CSSM
+		Renderer::RenderPassFeatures CSSM_shadowFeatures;
+		CSSM_shadowFeatures.colourPass = Renderer::ColourPass::ENABLED;
+		CSSM_shadowFeatures.depthTest = Renderer::DepthTest::ENABLED;
+		CSSM_shadowFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_GEOMETRY;
+		CSSM_shadowFeatures.specialColour = Renderer::SpecialColour::CSSM_SHADOWMAP;
+		Renderer::RenderPass CSSM_shadowPass(env.WindowPtr(), CSSM_shadowFeatures);
+	#endif
+
 	/* initialise swapchain */
 	env.InitialiseSwapChain({ &simpleOpaquePass, &presentPass });
 
@@ -315,8 +324,8 @@ int main(int argc, char** argv)
 		/* Buffers */
 
 		uint32_t CSSM_shadowMapIndex = env.CreateSideBuffers(
-			&simpleOpaquePass, 1, Renderer::Environment::SideBufferType::COMBINED,
-			false, nullptr, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
+			&CSSM_shadowPass, 1, Renderer::Environment::SideBufferType::COMBINED,
+			false, nullptr, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, true);
 		lut::ImageView* CSSM_shadowMapView = &(*env.GetSideBufferImageView(CSSM_shadowMapIndex))[0];
 		lut::ImageView* CSSM_depthMapView = &(*env.GetSideBufferImageView(CSSM_shadowMapIndex))[1];
 
@@ -343,7 +352,7 @@ int main(int argc, char** argv)
 
 		CSSM_shadowBindingData[1].binding = 1;
 		CSSM_shadowBindingData[1].s_View = **CSSM_shadowMapView;
-		CSSM_shadowBindingData[1].s_Sampler = *defaultSampler;
+		CSSM_shadowBindingData[1].s_Sampler = *pointSampler;
 
 		CSSM_shadowBindingData[2].binding = 2;
 		CSSM_shadowBindingData[2].u_Buffer = *shadowMapProjUBO;
@@ -357,7 +366,13 @@ int main(int argc, char** argv)
 		CSSM_shadowPipelineFeatures.alphaBlend = Renderer::AlphaBlend::DISABLED;
 		CSSM_shadowPipelineFeatures.fillMode = Renderer::FillMode::FILL;
 		CSSM_shadowPipelineFeatures.specialMode = Renderer::SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP;
-		Renderer::Pipeline CSSM_shadowPipeline(&env, CSSM_shadowPipelineFeatures, &simpleOpaquePass, CSSM_shadowLayouts);
+		CSSM_shadowPipelineFeatures.depthWrite = Renderer::DepthWrite::ENABLED;
+		Renderer::Pipeline CSSM_shadowOpaquePipeline(&env, CSSM_shadowPipelineFeatures, &CSSM_shadowPass, CSSM_shadowLayouts);
+
+		CSSM_shadowPipelineFeatures.specialMode = Renderer::SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2;
+		CSSM_shadowPipelineFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
+		CSSM_shadowPipelineFeatures.blendMode = Renderer::BlendMode::MIN_ONE_ONE;
+		Renderer::Pipeline CSSM_shadowTransparentPipeline(&env, CSSM_shadowPipelineFeatures, &CSSM_shadowPass, CSSM_shadowLayouts);
 
 		std::vector<const VkDescriptorSetLayout*> CSSM_layouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*CSSM_shadowMapLayout };
 		Renderer::PipelineFeatures CSMM_defaultFeatures = Renderer::Pipeline_Default;
@@ -492,28 +507,32 @@ int main(int argc, char** argv)
 		#if CSSM
 
 			/* transition the cssm textures for writing */
-			Renderer::CmdPrimeImageForWrite(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[0], false);
-			Renderer::CmdPrimeImageForWrite(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[1], true);
+			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[0], false);
+			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[1], true);
 
 			/* Begin cssm render pass */
-			env.BeginRenderPass(&simpleOpaquePass, CSSM_shadowMapIndex,
+			env.BeginRenderPass(&CSSM_shadowPass, CSSM_shadowMapIndex,
 				SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION); /* rendering to the colored stochastic shadow map */
 
 			{
 				/* all meshes */
-				CSSM_shadowPipeline.CmdBind(&env);
-				shadowMapProjSet.CmdBind(&env, &CSSM_shadowPipeline, 0);
-				noiseTextureSet.CmdBind(&env, &CSSM_shadowPipeline, 2);
-				model.CmdDrawOpaque(&env, &CSSM_shadowPipeline);
-				model.CmdDrawTransparent(&env, &CSSM_shadowPipeline);
+				CSSM_shadowOpaquePipeline.CmdBind(&env);
+				shadowMapProjSet.CmdBind(&env, &CSSM_shadowOpaquePipeline, 0);
+				noiseTextureSet.CmdBind(&env, &CSSM_shadowOpaquePipeline, 2);
+				model.CmdDrawOpaque(&env, &CSSM_shadowOpaquePipeline);
+
+				CSSM_shadowTransparentPipeline.CmdBind(&env);
+				shadowMapProjSet.CmdBind(&env, &CSSM_shadowTransparentPipeline, 0);
+				noiseTextureSet.CmdBind(&env, &CSSM_shadowTransparentPipeline, 2);
+				model.CmdDrawTransparent(&env, &CSSM_shadowTransparentPipeline);
 			}
 
 			/* End render pass */
 			env.EndRenderPass();
 
 			/* transition the cssm textures for reading */
-			Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[0], false);
-			Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[1], true);
+			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[0], false);
+			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[1], true);
 		#endif
 
 		/* Set the opaque shadow map texture for reading */

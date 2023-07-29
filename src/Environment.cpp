@@ -642,7 +642,8 @@ namespace Renderer
 		bool sharedBuffers,
 		SideBufferShareData* shareData,
 		int Width,
-		int Height)
+		int Height,
+		bool cssm_colour)
 	{
 		assert(count > 0);
 		assert((sharedBuffers) ? (shareData != nullptr) : true);
@@ -674,7 +675,7 @@ namespace Renderer
 					VkImageCreateInfo imageInfo{};
 					imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 					imageInfo.imageType = VK_IMAGE_TYPE_2D;
-					imageInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
+					imageInfo.format = cssm_colour ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_B8G8R8A8_SRGB;
 					imageInfo.extent.width = resolution.width;
 					imageInfo.extent.height = resolution.height;
 					imageInfo.extent.depth = 1;
@@ -704,14 +705,27 @@ namespace Renderer
 					viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 					viewInfo.image = sideImage.image;
 					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-					viewInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-					viewInfo.components = VkComponentMapping
+					if (cssm_colour == false)
 					{
-						VK_COMPONENT_SWIZZLE_IDENTITY,
-						VK_COMPONENT_SWIZZLE_IDENTITY,
-						VK_COMPONENT_SWIZZLE_IDENTITY,
-						VK_COMPONENT_SWIZZLE_IDENTITY
-					};
+						viewInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
+						viewInfo.components = VkComponentMapping
+						{
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY
+						};
+					}
+					else
+					{
+						viewInfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+						viewInfo.components = VkComponentMapping
+						{
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY,
+							VK_COMPONENT_SWIZZLE_IDENTITY
+						};
+					}
 					viewInfo.subresourceRange = VkImageSubresourceRange
 					{
 						VK_IMAGE_ASPECT_COLOR_BIT,

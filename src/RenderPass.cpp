@@ -49,7 +49,7 @@ namespace Renderer
 		if (_initData.colourPass == ColourPass::ENABLED)
 		{
 			/* Colour Buffer */
-			attachments[curAttachInd].format = window->swapchainFormat;
+			attachments[curAttachInd].format = (_initData.specialColour == SpecialColour::NONE) ? window->swapchainFormat : VK_FORMAT_R32G32B32A32_SFLOAT;
 			attachments[curAttachInd].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[curAttachInd].loadOp = (_initData.clearColour == ClearColour::ENABLED) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 			attachments[curAttachInd].storeOp = VK_ATTACHMENT_STORE_OP_STORE;

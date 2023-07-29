@@ -141,7 +141,8 @@ namespace Renderer
 				bool sharedBuffers = false,
 				SideBufferShareData* shareData = nullptr,
 				int Width = -1,
-				int Height = -1);
+				int Height = -1,
+				bool cssm_colour = false);
 			std::vector<lut::Image>* GetSideBufferImage(uint32_t index);
 			std::vector<lut::ImageView>* GetSideBufferImageView(uint32_t index);
 

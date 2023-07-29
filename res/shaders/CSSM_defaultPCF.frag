@@ -3,8 +3,9 @@
 float eps = 0.0001;
 float pi = 3.141592;
 
+float depth_bias = 0.001;
 float normal_bias = 0.08;
-float pcf_radius = 6;
+float pcf_radius = 4;
 
 /* Here be data */
 
@@ -86,32 +87,33 @@ vec3 LightingCalculation(vec3 position, vec3 normal, vec3 diffuse, float metalli
 
 	/* shadow coverage calculation */
 	vec3 normalBiasVector = normal * normal_bias;
-	vec4 shadowViewPosition = shadowData.projView * vec4(position + normalBiasVector, 1.0);
+	vec4 shadowViewPosition = shadowData.projView * vec4(position, 1.0);
 	vec4 shadowCoords = vec4(shadowViewPosition / shadowViewPosition.w);
 	shadowCoords.x = shadowCoords.x * 0.5 + 0.5;
 	shadowCoords.y = shadowCoords.y * 0.5 + 0.5;
+	shadowCoords.z -= depth_bias;
 	shadowCoords.w = 1.0;
 
 	float shadowStrength = 0.0;
 	vec3 shadowColour = vec3(0.0, 0.0, 0.0);
 	float totalSamples = 0.0;
-	vec2 texelSize = vec2(textureSize(shadowDepthMap, 0));
+	vec2 texelSize = vec2(textureSize(shadowColourMap, 0));
 	for (float u = -pcf_radius; u < pcf_radius; u += 1.0)
 	{
 		for (float v = -pcf_radius; v < pcf_radius; v += 1.0)
 		{
 			shadowStrength += textureProj(shadowDepthMap, shadowCoords + vec4(u / texelSize.x, v / texelSize.y, 0.0, 0.0));
-			shadowColour += texture(shadowColourMap, shadowCoords.rg + vec2(u / texelSize.x, v / texelSize.y)).rgb;
+			vec3 shadowSample = textureLod(shadowColourMap, shadowCoords.xy + vec2(u / texelSize.x, v / texelSize.y), 0).rgb;
+			shadowColour.r += float(shadowSample.r >= shadowCoords.z);
+			shadowColour.g += float(shadowSample.g >= shadowCoords.z);
+			shadowColour.b += float(shadowSample.b >= shadowCoords.z);
 			totalSamples += 1.0;
 		}
 	}
 	shadowStrength /= totalSamples;
-	// shadowStrength = textureProj(shadowMap, shadowCoords); /* uncomment this line to ignore PCF calculation */
 	shadowColour /= totalSamples;
 
-	vec3 direct = (lightingData.sunLight.colour.rgb * diffuse);
-	vec3 finalShadowColour = shadowColour + (direct - shadowColour) * shadowStrength;
-	direct = finalShadowColour + (direct - finalShadowColour) * shadowStrength;
+	vec3 direct = (lightingData.sunLight.colour.rgb * shadowColour * shadowStrength * diffuse);
 	vec3 ambient = lightingData.ambientLight.colour.rgb * diffuse;
 
 	return ambient + (posDot(normal, to_light)) * direct;

@@ -123,6 +123,11 @@ namespace Renderer
 					frag = load_shader_module(environment->Window(), "../res/shaders/" "CSSM_shadowPass.frag.spv");
 					break;
 
+				case SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "SSM_shadowPass.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "CSSM_secondShadowPass.frag.spv");
+					break;
+
 				case SpecialMode::CSSM_DEFAULT:
 				default:
 					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
@@ -223,7 +228,8 @@ namespace Renderer
 		if (_initData.specialMode == SpecialMode::SHADOW_MAP ||
 			_initData.specialMode == SpecialMode::TS_COLOURED_SHADOW_MAP ||
 			_initData.specialMode == SpecialMode::SSM_STOCHASTIC_SHADOW_MAP ||
-			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP)
+			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP ||
+			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2)
 		{
 			viewport.width = SHADOW_MAP_RESOLUTION_F;
 			viewport.height = SHADOW_MAP_RESOLUTION_F;
@@ -313,9 +319,18 @@ namespace Renderer
 		if (_initData.alphaBlend == AlphaBlend::ENABLED)
 		{
 			blendState[0].blendEnable = VK_TRUE;
-			blendState[0].colorBlendOp = VK_BLEND_OP_ADD;
-			blendState[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-			blendState[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			if (_initData.blendMode == BlendMode::ADD_SRC_ONEMINUSSRC)
+			{
+				blendState[0].colorBlendOp = VK_BLEND_OP_ADD;
+				blendState[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+				blendState[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			}
+			else if (_initData.blendMode == BlendMode::MIN_ONE_ONE)
+			{
+				blendState[0].colorBlendOp = VK_BLEND_OP_MIN;
+				blendState[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+				blendState[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			}
 			blendState[0].alphaBlendOp = VK_BLEND_OP_ADD;
 			blendState[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 			blendState[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -324,7 +339,10 @@ namespace Renderer
 		{
 			blendState[0].blendEnable = VK_FALSE;
 		}
-		blendState[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		if (_initData.colorWrite == ColorWrite::ENABLED)
+			blendState[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+		else
+			blendState[0].colorWriteMask = 0;
 
 		VkPipelineColorBlendStateCreateInfo blendInfo{};
 		blendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

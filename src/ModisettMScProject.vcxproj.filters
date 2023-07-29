@@ -204,5 +204,8 @@
     <None Include="..\res\shaders\CSSM_defaultPCF.frag">
       <Filter>res\shaders</Filter>
     </None>
+    <None Include="..\res\shaders\CSSM_secondShadowPass.frag">
+      <Filter>res\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
