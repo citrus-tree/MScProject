@@ -40,6 +40,7 @@ namespace lut = labutils;
 #define TRANSLUCENT_SHADOWS 0
 #define SSM 0
 #define CSSM 1
+#define DEPTH_PEELED_TS 0
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
 const float FarClipDist = 32.0f;
@@ -106,9 +107,14 @@ int main(int argc, char** argv)
 	// camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
 	// camera.FrameUpdate(0.01f);
 
-	//*
+	/*
 	camera.SetPosition(glm::vec3(10.090, -7.994, 5.043));
 	camera.SetOrientation(glm::vec2(274.000, 1083.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	//*
+	camera.SetPosition(glm::vec3(3.976, -2.095, -0.002));
+	camera.SetOrientation(glm::vec2(790.000, 786.000));
 	camera.FrameUpdate(0.01f);//*/
 
 	/*
@@ -126,6 +132,7 @@ int main(int argc, char** argv)
 	/* set lighting parameters */
 	Renderer::Uniforms::LightData lights;
 	lights.sunLight.direction = glm::normalize(glm::vec4(1.0f, -1.0f, 0.0f, 0.0f));
+	// lights.sunLight.direction = glm::normalize(glm::vec4(1.0f, -0.5f, 0.0f, 0.0f));
 	lights.sunLight.colour = glm::normalize(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	/* lighting uniform */
@@ -194,7 +201,7 @@ int main(int argc, char** argv)
 	Renderer::DescriptorSetLayout singleTextureLayout(&env, singleTextureLayoutData);
 
 	/* load model */
-	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
+	Renderer::Model model(&env, "../res/models/window scene.glb", &simpleLayout, &defaultSampler);
 	model.SortTransparentGeometry(-lights.sunLight.direction * 9999.9f, camera.Position());
 
 	/* Pipelines and Dependencies */
