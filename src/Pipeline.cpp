@@ -129,9 +129,19 @@ namespace Renderer
 					break;
 
 				case SpecialMode::CSSM_DEFAULT:
-				default:
 					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
 					frag = load_shader_module(environment->Window(), "../res/shaders/" "CSSM_defaultPCF.frag.spv");
+					break;
+
+				case SpecialMode::DPTS_GEOMETRY:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "DPTS_geometryPass.frag.spv");
+					break;
+
+				case SpecialMode::DPTS_SHADOWMAP:
+					default:
+					vert = load_shader_module(environment->Window(), "../res/shaders/" "default.vert.spv");
+					frag = load_shader_module(environment->Window(), "../res/shaders/" "DPTS_shadowPass.frag.spv");
 					break;
 			}
 
@@ -190,7 +200,8 @@ namespace Renderer
 			if (_initData.specialMode == SpecialMode::NONE ||
 				_initData.specialMode == SpecialMode::TS_GEOMETRY ||
 				_initData.specialMode == SpecialMode::SSM_DEFAULT_BIG_PCF ||
-				_initData.specialMode == SpecialMode::CSSM_DEFAULT)
+				_initData.specialMode == SpecialMode::CSSM_DEFAULT ||
+				_initData.specialMode == SpecialMode::DPTS_GEOMETRY)
 			{
 					/* Normals input info */
 				vertexInputs.push_back({});
@@ -229,7 +240,8 @@ namespace Renderer
 			_initData.specialMode == SpecialMode::TS_COLOURED_SHADOW_MAP ||
 			_initData.specialMode == SpecialMode::SSM_STOCHASTIC_SHADOW_MAP ||
 			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP ||
-			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2)
+			_initData.specialMode == SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2 ||
+			_initData.specialMode == SpecialMode::DPTS_SHADOWMAP)
 		{
 			viewport.width = SHADOW_MAP_RESOLUTION_F;
 			viewport.height = SHADOW_MAP_RESOLUTION_F;
