@@ -426,7 +426,9 @@ namespace Renderer
 		/* Get ready to start the render pass */
 		std::vector<VkClearValue> clearValues{};
 
-		if (render_pass->Features().colourPass == ColourPass::ENABLED && render_pass->Features().clearColour == ClearColour::ENABLED)
+		if (render_pass->Features().colourPass == ColourPass::ENABLED &&
+			(render_pass->Features().clearColour == ClearColour::ENABLED ||
+			render_pass->Features().clearDepth == ClearDepth::ENABLED))
 		{
 			clearValues.push_back({});
 			/*clearValues.back().color.float32[0] = 0.53f;

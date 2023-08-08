@@ -334,7 +334,7 @@ namespace Renderer
 
 	void Model::CmdDrawTransparent(Environment* environment, Pipeline* pipeline, bool materialOverriden)
 	{
-		CmdDrawTransparent(environment, pipeline, 0, _transparentMeshes.size());
+		CmdDrawTransparent(environment, pipeline, 0, _transparentMeshes.size(), materialOverriden);
 	}
 
 	void Model::CmdDrawTransparent(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden)
@@ -406,7 +406,7 @@ namespace Renderer
 					glm::vec3 otherToLight = otherCenter - lightPosition;
 					float otherDistanceToLight = glm::dot(otherToLight, otherToLight); /* also squared distance */
 
-					if (curDistanceToLight < otherDistanceToLight)
+					if (curDistanceToLight > otherDistanceToLight)
 					{
 						_transparentMeshesSortedClosestToLight.emplace(
 							_transparentMeshesSortedClosestToLight.begin() + c,
@@ -455,7 +455,7 @@ namespace Renderer
 
 	void Model::CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, bool materialOverriden)
 	{
-		CmdDrawTransparentLightFrontToBack(environment, pipeline, 0, _transparentMeshes.size());
+		CmdDrawTransparentLightFrontToBack(environment, pipeline, 0, _transparentMeshes.size(), materialOverriden);
 	}
 
 	void Model::CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden)
@@ -502,7 +502,7 @@ namespace Renderer
 
 	void Model::CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, bool materialOverriden)
 	{
-		CmdDrawTransparentCameraBackToFront(environment, pipeline, 0, _transparentMeshes.size());
+		CmdDrawTransparentCameraBackToFront(environment, pipeline, 0, _transparentMeshes.size(), materialOverriden);
 	}
 
 	void Model::CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden)

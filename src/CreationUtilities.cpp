@@ -86,10 +86,7 @@ namespace Renderer
 		samplerInfo.mipLodBias = 0.f;
 
 		/* Extra bits for shadow mapping */
-			/* Anything outside the shadowmap is considered in shadow. 
-				I'm only doing this since I'm only using spotlights;
-				I would usually do the opposite of this for directional shadows.*/
-		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+		samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			/* Compare ops */

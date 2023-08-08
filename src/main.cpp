@@ -1,4 +1,7 @@
 
+/* c++ */
+#include <algorithm>
+
 /* glm */
 #if !defined(GLM_FORCE_RADIANS)
 #	define GLM_FORCE_RADIANS
@@ -39,10 +42,8 @@ namespace lut = labutils;
 #define VANILLA 0
 #define TRANSLUCENT_SHADOWS 0
 #define SSM 0
-#define CSSM 1
-#define DPTS 0
-
-#define DEPTH_PEELED_LAYERS 2
+#define CSSM 0
+#define CTS 1
 
 const float FOV = 90.0f / 180.0f * 3.1415f;
 const float FarClipDist = 32.0f;
@@ -77,13 +78,22 @@ int main(int argc, char** argv)
 	shadowPassFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_SHADOWMAP;
 	Renderer::RenderPass shadowPass(env.WindowPtr(), shadowPassFeatures);
 
-	#if TRANSLUCENT_SHADOWS or DPTS
+	#if TRANSLUCENT_SHADOWS or CTS
 		Renderer::RenderPassFeatures TS_translucentShadowPassFeatures;
 		TS_translucentShadowPassFeatures.colourPass = Renderer::ColourPass::ENABLED;
 		TS_translucentShadowPassFeatures.depthTest = Renderer::DepthTest::ENABLED;
 		TS_translucentShadowPassFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_GEOMETRY;
 		TS_translucentShadowPassFeatures.clearDepth = Renderer::ClearDepth::DISABLED;
 		Renderer::RenderPass TS_translucentShadowPass(env.WindowPtr(), TS_translucentShadowPassFeatures);
+	#endif
+
+	#if CTS
+		Renderer::RenderPassFeatures CTS_compositingFeatures;
+		CTS_compositingFeatures.colourPass = Renderer::ColourPass::ENABLED;
+		CTS_compositingFeatures.depthTest = Renderer::DepthTest::ENABLED;
+		CTS_compositingFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_GEOMETRY;
+		CTS_compositingFeatures.clearColour = Renderer::ClearColour::DISABLED;
+		Renderer::RenderPass CTS_compositingPass(env.WindowPtr(), CTS_compositingFeatures);
 	#endif
 
 	#if CSSM
@@ -109,12 +119,12 @@ int main(int argc, char** argv)
 	// camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
 	// camera.FrameUpdate(0.01f);
 
-	/*
+	//*
 	camera.SetPosition(glm::vec3(10.090, -7.994, 5.043));
 	camera.SetOrientation(glm::vec2(274.000, 1083.000));
 	camera.FrameUpdate(0.01f);//*/
 
-	//*
+	/*
 	camera.SetPosition(glm::vec3(3.976, -2.095, -0.002));
 	camera.SetOrientation(glm::vec2(790.000, 786.000));
 	camera.FrameUpdate(0.01f);//*/
@@ -203,7 +213,7 @@ int main(int argc, char** argv)
 	Renderer::DescriptorSetLayout singleTextureLayout(&env, singleTextureLayoutData);
 
 	/* load model */
-	Renderer::Model model(&env, "../res/models/window scene.glb", &simpleLayout, &defaultSampler);
+	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
 	model.SortTransparentGeometry(-lights.sunLight.direction * 9999.9f, camera.Position());
 
 	/* Pipelines and Dependencies */
@@ -230,7 +240,7 @@ int main(int argc, char** argv)
 	shadowPipelineFeatures.specialMode = Renderer::SpecialMode::SHADOW_MAP;
 	Renderer::Pipeline shadowPipeline(&env, shadowPipelineFeatures, &shadowPass, shadowLayouts);
 
-	#if TRANSLUCENT_SHADOWS or DPTS /* TRANSLUCENT SHADOWS IMPLEMENTATION: START UP TASKS */
+	#if TRANSLUCENT_SHADOWS or CTS /* TRANSLUCENT SHADOWS IMPLEMENTATION: START UP TASKS */
 		/* TRANSLUCENT SHADOWS: extra buffers for translucent shadows */
 		uint32_t TS_translucentDepthMapIndex = env.CreateSideBuffers(&shadowPass, 1, Renderer::Environment::SideBufferType::DEPTH,
 			false, nullptr, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
@@ -277,28 +287,26 @@ int main(int argc, char** argv)
 
 		Renderer::DescriptorSet TS_shadowMapSet(&env, &TS_shadowMapLayout, 4, TS_shadowBindingData.data());
 
-		#if not DPTS
-			/* TRANSLUCENT SHADOWS: Pipelines */
+		/* TRANSLUCENT SHADOWS: Pipelines */
 
-			std::vector<const VkDescriptorSetLayout*> TS_simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*TS_shadowMapLayout };
-			Renderer::PipelineFeatures TS_geometryFeatures = Renderer::Pipeline_Default;
-			TS_geometryFeatures.specialMode = Renderer::SpecialMode::TS_GEOMETRY;
-			Renderer::Pipeline TS_geometryPipeline(&env, TS_geometryFeatures, &simpleOpaquePass, TS_simpleLayouts);
+		std::vector<const VkDescriptorSetLayout*> TS_simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*TS_shadowMapLayout };
+		Renderer::PipelineFeatures TS_geometryFeatures = Renderer::Pipeline_Default;
+		TS_geometryFeatures.specialMode = Renderer::SpecialMode::TS_GEOMETRY;
+		Renderer::Pipeline TS_geometryPipeline(&env, TS_geometryFeatures, &simpleOpaquePass, TS_simpleLayouts);
 
-			Renderer::PipelineFeatures TS_transparentGeometryFeatures = TS_geometryFeatures;
-			TS_transparentGeometryFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
-			TS_transparentGeometryFeatures.depthTest = Renderer::DepthTest::ENABLED;
-			TS_transparentGeometryFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
-			Renderer::Pipeline TS_transparentGeometryPipeline(&env, TS_transparentGeometryFeatures, &simpleOpaquePass, TS_simpleLayouts);
+		Renderer::PipelineFeatures TS_transparentGeometryFeatures = TS_geometryFeatures;
+		TS_transparentGeometryFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
+		TS_transparentGeometryFeatures.depthTest = Renderer::DepthTest::ENABLED;
+		TS_transparentGeometryFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
+		Renderer::Pipeline TS_transparentGeometryPipeline(&env, TS_transparentGeometryFeatures, &simpleOpaquePass, TS_simpleLayouts);
 
-			std::vector<const VkDescriptorSetLayout*> TS_transparentPipelineLayouts = { &*shadowMapProjSetLayout, &*simpleLayout };
-			Renderer::PipelineFeatures TS_transparentFeatures = Renderer::Pipeline_Default;
-			TS_transparentFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
-			TS_transparentFeatures.depthTest = Renderer::DepthTest::ENABLED;
-			TS_transparentFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
-			TS_transparentFeatures.specialMode = Renderer::SpecialMode::TS_COLOURED_SHADOW_MAP;
-			Renderer::Pipeline TS_transparentPipeline(&env, TS_transparentFeatures, &simpleOpaquePass, TS_transparentPipelineLayouts);
-		#endif
+		std::vector<const VkDescriptorSetLayout*> TS_transparentPipelineLayouts = { &*shadowMapProjSetLayout, &*simpleLayout };
+		Renderer::PipelineFeatures TS_transparentFeatures = Renderer::Pipeline_Default;
+		TS_transparentFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
+		TS_transparentFeatures.depthTest = Renderer::DepthTest::ENABLED;
+		TS_transparentFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
+		TS_transparentFeatures.specialMode = Renderer::SpecialMode::TS_COLOURED_SHADOW_MAP;
+		Renderer::Pipeline TS_transparentPipeline(&env, TS_transparentFeatures, &simpleOpaquePass, TS_transparentPipelineLayouts);
 	#endif
 
 	#if SSM or CSSM
@@ -395,54 +403,12 @@ int main(int argc, char** argv)
 		Renderer::Pipeline CSSM_transparentPipeline(&env, CSSM_transparentFeatures, &simpleOpaquePass, CSSM_layouts);
 	#endif
 
-	#if DPTS
-
-			/* buffers for depth peeling */
-
-			uint32_t DPTS_depthMapsIndex = env.CreateSideBuffers(&shadowPass, 2, Renderer::Environment::SideBufferType::DEPTH,
-				false, nullptr, env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
-			
-			uint32_t DPTS_frameBuffers[DEPTH_PEELED_LAYERS];
-			for (int i = 0; i < DEPTH_PEELED_LAYERS; i++)
-			{
-				Renderer::SideBufferShareData DPTS_shareData;
-				DPTS_shareData.depthIndex = DPTS_depthMapsIndex + (i % 2);
-				DPTS_shareData.depthSubindex = 0;
-
-				DPTS_frameBuffers[i] = env.CreateSideBuffers(&simpleOpaquePass, 1, Renderer::Environment::SideBufferType::COMBINED,
-					true, &DPTS_shareData, env.Window().swapchainExtent.width, env.Window().swapchainExtent.height);
-			}
-
-			Renderer::DescriptorSet DPTS_depthBufferA(&env, &singleTextureLayout, *env.GetSideBufferImageView(DPTS_depthMapsIndex)->at(0), *pointSampler);
-			Renderer::DescriptorSet DPTS_depthBufferB(&env, &singleTextureLayout, *env.GetSideBufferImageView(DPTS_depthMapsIndex + 1)->at(0), *pointSampler);
-
-			/* Pipelines */
-
-			std::vector<const VkDescriptorSetLayout*> DPTS_shadowLayouts = { &*shadowMapProjSetLayout, &*cameraUniformLayout, &*singleTextureLayout };
-			Renderer::PipelineFeatures DPTS_shadowPipelineFeatures;
-			DPTS_shadowPipelineFeatures.alphaBlend = Renderer::AlphaBlend::DISABLED;
-			DPTS_shadowPipelineFeatures.fillMode = Renderer::FillMode::FILL;
-			DPTS_shadowPipelineFeatures.specialMode = Renderer::SpecialMode::SHADOW_MAP;
-			Renderer::Pipeline DPTS_shadowPipeline(&env, DPTS_shadowPipelineFeatures, &shadowPass, DPTS_shadowLayouts);
-
-			std::vector<const VkDescriptorSetLayout*> DPTS_simpleLayouts = { &*cameraUniformLayout, &*simpleLayout, &*lightingUniformLayout, &*TS_shadowMapLayout };
-			Renderer::PipelineFeatures DPTS_geometryFeatures = Renderer::Pipeline_Default;
-			DPTS_geometryFeatures.specialMode = Renderer::SpecialMode::DPTS_GEOMETRY;
-			Renderer::Pipeline DPTS_geometryPipeline(&env, DPTS_geometryFeatures, &simpleOpaquePass, DPTS_simpleLayouts);
-
-			Renderer::PipelineFeatures DPTS_transparentGeometryFeatures = DPTS_geometryFeatures;
-			DPTS_transparentGeometryFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
-			DPTS_transparentGeometryFeatures.depthTest = Renderer::DepthTest::ENABLED;
-			DPTS_transparentGeometryFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
-			Renderer::Pipeline DPTS_transparentGeometryPipeline(&env, DPTS_transparentGeometryFeatures, &simpleOpaquePass, DPTS_simpleLayouts);
-
-			std::vector<const VkDescriptorSetLayout*> DPTS_transparentPipelineLayouts = { &*shadowMapProjSetLayout, &*simpleLayout };
-			Renderer::PipelineFeatures DPTS_transparentFeatures = Renderer::Pipeline_Default;
-			DPTS_transparentFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
-			DPTS_transparentFeatures.depthTest = Renderer::DepthTest::ENABLED;
-			DPTS_transparentFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
-			DPTS_transparentFeatures.specialMode = Renderer::SpecialMode::DPTS_SHADOWMAP;
-			Renderer::Pipeline DPTS_transparentPipeline(&env, DPTS_transparentFeatures, &simpleOpaquePass, DPTS_transparentPipelineLayouts);
+	#if CTS
+		Renderer::PipelineFeatures CTS_transparentGeometryFeatures = TS_geometryFeatures;
+		CTS_transparentGeometryFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
+		CTS_transparentGeometryFeatures.depthTest = Renderer::DepthTest::ENABLED;
+		CTS_transparentGeometryFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
+		Renderer::Pipeline CTS_transparentGeometryPipeline(&env, CTS_transparentGeometryFeatures, &CTS_compositingPass, TS_simpleLayouts);
 	#endif
 
 	/* Main loop */
@@ -479,9 +445,14 @@ int main(int argc, char** argv)
 			transparentPipeline.Repair(&env);
 			postPresentPipeline.Repair(&env);
 
-			#if TRANSLUCENT_SHADOWS
+			#if TRANSLUCENT_SHADOWS or CTS
 				TS_geometryPipeline.Repair(&env);
 				TS_transparentGeometryPipeline.Repair(&env);
+			#endif
+
+
+			#if CTS
+				CTS_transparentGeometryPipeline.Repair(&env);
 			#endif
 
 			camera.UpdateCameraSettings(FOV,
@@ -523,7 +494,7 @@ int main(int argc, char** argv)
 			firstFrame = false;
 			Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 
-			#if TRANSLUCENT_SHADOWS or DPTS
+			#if TRANSLUCENT_SHADOWS or CTS
 				Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
 				Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
 			#endif
@@ -533,20 +504,22 @@ int main(int argc, char** argv)
 				Renderer::CmdPrimeImageForRead(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[1], true);
 			#endif
 		}
-		Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
-		
-		#if TRANSLUCENT_SHADOWS or DPTS
+		#if not CSSM
+			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
+		#endif
+
+		#if TRANSLUCENT_SHADOWS or CTS
 			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
 			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
 		#endif
 
 
-		#if VANILLA or TRANSLUCENT_SHADOWS or SSM or DPTS
+		#if VANILLA or TRANSLUCENT_SHADOWS or SSM or CTS
 			/* Begin shadow map pass */
 			env.BeginRenderPass(&shadowPass, shadowMapIndex); /* rendering to the opaque shadow map */
 
 			{
-				#if VANILLA or TRANSLUCENT_SHADOWS
+				#if VANILLA or TRANSLUCENT_SHADOWS or CTS
 					/* opaque meshes */
 					shadowPipeline.CmdBind(&env);
 					shadowMapProjSet.CmdBind(&env, &shadowPipeline, 0);
@@ -561,12 +534,6 @@ int main(int argc, char** argv)
 					model.CmdDrawOpaque(&env, &SSM_shadowPipeline);
 					model.CmdDrawTransparent(&env, &SSM_shadowPipeline);
 				#endif
-
-				#if DPTS
-					shadowPipeline.CmdBind(&env);
-					shadowMapProjSet.CmdBind(&env, &shadowPipeline, 0);
-					model.CmdDrawOpaque_DepthOnly(&env, &shadowPipeline);
-				#endif
 			}
 
 			/* End render pass */
@@ -574,7 +541,6 @@ int main(int argc, char** argv)
 		#endif
 
 		#if CSSM
-
 			/* transition the cssm textures for writing */
 			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[0], false);
 			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(CSSM_shadowMapIndex))[1], true);
@@ -609,7 +575,7 @@ int main(int argc, char** argv)
 			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 		#endif
 
-		#if TRANSLUCENT_SHADOWS
+		#if TRANSLUCENT_SHADOWS or CTS
 			/* TRANSLUCENT SHADOWS: Begin translucent shadow map pass */
 			env.BeginRenderPass(&shadowPass, TS_translucentDepthMapIndex); /* rendering to translucent shadow depth map */
 
@@ -636,7 +602,7 @@ int main(int argc, char** argv)
 					so the final translucent shadow colour can be determined. */
 				TS_transparentPipeline.CmdBind(&env);
 				shadowMapProjSet.CmdBind(&env, &TS_transparentPipeline, 0);
-				model.CmdDrawTransparentLightFrontToBack(&env, &TS_transparentPipeline, true);
+				model.CmdDrawTransparentLightFrontToBack(&env, &TS_transparentPipeline);
 			}
 
 			/* TRANSLUCENT SHADOWS: End render pass */
@@ -649,37 +615,37 @@ int main(int argc, char** argv)
 			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 		#endif
 
-		#if not DPTS
-			/* Begin geometry pass */
-			env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
+		/* Begin geometry pass */
+		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
 
-			{
-				/* Draw meshes */
+		{
+			/* Draw meshes */
 
-				#if VANILLA
-					/* opaque geometry */
-					simplePipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &simplePipeline, 0);
-					lightingSet.CmdBind(&env, &simplePipeline, 2);
-					shadowMapSet.CmdBind(&env, &simplePipeline, 3);
-					model.CmdDrawOpaque(&env, &simplePipeline);
+			#if VANILLA
+				/* opaque geometry */
+				simplePipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &simplePipeline, 0);
+				lightingSet.CmdBind(&env, &simplePipeline, 2);
+				shadowMapSet.CmdBind(&env, &simplePipeline, 3);
+				model.CmdDrawOpaque(&env, &simplePipeline);
 
-					/* transparent geometry */
-					transparentPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &transparentPipeline, 0);
-					lightingSet.CmdBind(&env, &transparentPipeline, 2);
-					shadowMapSet.CmdBind(&env, &transparentPipeline, 3);
-					model.CmdDrawTransparentCameraBackToFront(&env, &transparentPipeline);
-				#endif
+				/* transparent geometry */
+				transparentPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &transparentPipeline, 0);
+				lightingSet.CmdBind(&env, &transparentPipeline, 2);
+				shadowMapSet.CmdBind(&env, &transparentPipeline, 3);
+				model.CmdDrawTransparentCameraBackToFront(&env, &transparentPipeline);
+			#endif
+
+			#if TRANSLUCENT_SHADOWS or CTS
+				/* opaque geometry */
+				TS_geometryPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &TS_geometryPipeline, 0);
+				lightingSet.CmdBind(&env, &TS_geometryPipeline, 2);
+				TS_shadowMapSet.CmdBind(&env, &TS_geometryPipeline, 3);
+				model.CmdDrawOpaque(&env, &TS_geometryPipeline);
 
 				#if TRANSLUCENT_SHADOWS
-					/* opaque geometry */
-					TS_geometryPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &TS_geometryPipeline, 0);
-					lightingSet.CmdBind(&env, &TS_geometryPipeline, 2);
-					TS_shadowMapSet.CmdBind(&env, &TS_geometryPipeline, 3);
-					model.CmdDrawOpaque(&env, &TS_geometryPipeline);
-
 					/* transparent geometry */
 					TS_transparentGeometryPipeline.CmdBind(&env);
 					cameraSet.CmdBind(&env, &TS_transparentGeometryPipeline, 0);
@@ -687,43 +653,45 @@ int main(int argc, char** argv)
 					TS_shadowMapSet.CmdBind(&env, &TS_transparentGeometryPipeline, 3);
 					model.CmdDrawTransparentCameraBackToFront(&env, &TS_transparentGeometryPipeline);
 				#endif
+			#endif
 
-				#if SSM
-					/* opaque geometry */
-					SSM_defaultPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &SSM_defaultPipeline, 0);
-					lightingSet.CmdBind(&env, &SSM_defaultPipeline, 2);
-					shadowMapSet.CmdBind(&env, &SSM_defaultPipeline, 3);
-					model.CmdDrawOpaque(&env, &SSM_defaultPipeline);
+			#if SSM
+				/* opaque geometry */
+				SSM_defaultPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &SSM_defaultPipeline, 0);
+				lightingSet.CmdBind(&env, &SSM_defaultPipeline, 2);
+				shadowMapSet.CmdBind(&env, &SSM_defaultPipeline, 3);
+				model.CmdDrawOpaque(&env, &SSM_defaultPipeline);
 
-					/* transparent geometry */
-					SSM_transparentPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &SSM_transparentPipeline, 0);
-					lightingSet.CmdBind(&env, &SSM_transparentPipeline, 2);
-					shadowMapSet.CmdBind(&env, &SSM_transparentPipeline, 3);
-					model.CmdDrawTransparentCameraBackToFront(&env, &SSM_transparentPipeline);
-				#endif
+				/* transparent geometry */
+				SSM_transparentPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &SSM_transparentPipeline, 0);
+				lightingSet.CmdBind(&env, &SSM_transparentPipeline, 2);
+				shadowMapSet.CmdBind(&env, &SSM_transparentPipeline, 3);
+				model.CmdDrawTransparentCameraBackToFront(&env, &SSM_transparentPipeline);
+			#endif
 
-				#if CSSM
-					/* opaque geometry */
-					CSSM_defaultPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &CSSM_defaultPipeline, 0);
-					lightingSet.CmdBind(&env, &CSSM_defaultPipeline, 2);
-					CSSM_shadowMapSet.CmdBind(&env, &CSSM_defaultPipeline, 3);
-					model.CmdDrawOpaque(&env, &CSSM_defaultPipeline);
+			#if CSSM
+				/* opaque geometry */
+				CSSM_defaultPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &CSSM_defaultPipeline, 0);
+				lightingSet.CmdBind(&env, &CSSM_defaultPipeline, 2);
+				CSSM_shadowMapSet.CmdBind(&env, &CSSM_defaultPipeline, 3);
+				model.CmdDrawOpaque(&env, &CSSM_defaultPipeline);
 
-					/* transparent geometry */
-					CSSM_transparentPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &CSSM_transparentPipeline, 0);
-					lightingSet.CmdBind(&env, &CSSM_transparentPipeline, 2);
-					CSSM_shadowMapSet.CmdBind(&env, &CSSM_transparentPipeline, 3);
-					model.CmdDrawTransparentCameraBackToFront(&env, &CSSM_transparentPipeline);
-				#endif
-			}
+				/* transparent geometry */
+				CSSM_transparentPipeline.CmdBind(&env);
+				cameraSet.CmdBind(&env, &CSSM_transparentPipeline, 0);
+				lightingSet.CmdBind(&env, &CSSM_transparentPipeline, 2);
+				CSSM_shadowMapSet.CmdBind(&env, &CSSM_transparentPipeline, 3);
+				model.CmdDrawTransparentCameraBackToFront(&env, &CSSM_transparentPipeline);
+			#endif
+		}
 
-			/* End render pass */
-			env.EndRenderPass();
+		/* End render pass */
+		env.EndRenderPass();
 
+	#if not CTS
 			/* Swap the intermediate images */
 			env.CmdSwapIntermediates(); /* 0 -> 1 */
 
@@ -738,35 +706,48 @@ int main(int argc, char** argv)
 
 			/* End render pass */
 			env.EndRenderPass();
-	#else
+
+		#else
 			/* Render the depth peeled layers */
-			for (int i = 0; i < DEPTH_PEELED_LAYERS; i++)
+			for (uint32_t i = 0; i < model.TransparentMeshCount(); i++)
 			{
-				/* Begin geometry pass */
-				env.BeginRenderPass(&simpleOpaquePass, DPTS_frameBuffers[i]);
+				uint32_t currentMesh = model.TransparentMeshesSortedFarthestFromCamera()[i];
+				uint32_t lightFarIndex = std::find(
+					model.TransparentMeshesSortedClosestToLight().begin(),
+					model.TransparentMeshesSortedClosestToLight().end(),
+					static_cast<int>(currentMesh)) -
+					model.TransparentMeshesSortedClosestToLight().begin();
+
+				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
+				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
+
+				env.BeginRenderPass(&TS_translucentShadowPass, TS_translucentShadowMapIndex,
+					SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION); /* rendering to translucent shadow colour map */
 
 				{
-					Renderer::DescriptorSet& prevDepthMapDescSet = DPTS_depthBufferA;
-					if (i % 2 == 0)
-						Renderer::DescriptorSet& prevDepthMapDescSet = DPTS_depthBufferB;
+					/* this pass accumulates the colours of transparent geometry visible to the light,
+						so the final translucent shadow colour can be determined. */
+					TS_transparentPipeline.CmdBind(&env);
+					shadowMapProjSet.CmdBind(&env, &TS_transparentPipeline, 0);
+					model.CmdDrawTransparentLightFrontToBack(&env, &TS_transparentPipeline, 0, lightFarIndex);
+				}
 
-					/* Draw meshes */
+				env.EndRenderPass();
 
-					/* opaque geometry */
-					DPTS_geometryPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &DPTS_geometryPipeline, 0);
-					lightingSet.CmdBind(&env, &DPTS_geometryPipeline, 2);
-					shadowMapSet.CmdBind(&env, &DPTS_geometryPipeline, 3);
-					prevDepthMapDescSet.CmdBind(&env, &DPTS_geometryPipeline, 4);
-					model.CmdDrawOpaque(&env, &DPTS_geometryPipeline);
+				Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
+				Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
+				Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
 
-					/* transparent geometry */
-					DPTS_transparentPipeline.CmdBind(&env);
-					cameraSet.CmdBind(&env, &DPTS_transparentPipeline, 0);
-					lightingSet.CmdBind(&env, &DPTS_transparentPipeline, 2);
-					shadowMapSet.CmdBind(&env, &DPTS_transparentPipeline, 3);
-					prevDepthMapDescSet.CmdBind(&env, &DPTS_transparentPipeline, 4);
-					model.CmdDrawTransparentCameraBackToFront(&env, &DPTS_transparentPipeline);
+				/* Begin geometry pass */
+				env.BeginRenderPass(&CTS_compositingPass); /* rendering to intermediate 0 */
+
+				{
+					/* draw transparent geometry */
+					CTS_transparentGeometryPipeline.CmdBind(&env);
+					cameraSet.CmdBind(&env, &CTS_transparentGeometryPipeline, 0);
+					lightingSet.CmdBind(&env, &CTS_transparentGeometryPipeline, 2);
+					TS_shadowMapSet.CmdBind(&env, &CTS_transparentGeometryPipeline, 3);
+					model.CmdDrawTransparentCameraBackToFront(&env, &CTS_transparentGeometryPipeline, i, i + 1);
 				}
 
 				/* End render pass */
