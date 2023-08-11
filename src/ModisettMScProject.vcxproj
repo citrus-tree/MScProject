@@ -65,7 +65,6 @@
     <None Include="..\res\shaders\CSSM_shadowPass.frag" />
     <None Include="..\res\shaders\default.frag" />
     <None Include="..\res\shaders\default.vert" />
-    <None Include="..\res\shaders\DPTS_geometryPass.frag" />
     <None Include="..\res\shaders\fullscreen.vert" />
     <None Include="..\res\shaders\present_quad.frag" />
     <None Include="..\res\shaders\shadowmap.frag" />
@@ -76,9 +75,6 @@
     <None Include="..\res\shaders\TS_colouredShadowPass.frag" />
     <None Include="..\res\shaders\TS_colouredShadowPass.vert" />
     <None Include="..\res\shaders\TS_geometryPass.frag" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\res\shaders\DPTS_shadowPass.frag" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

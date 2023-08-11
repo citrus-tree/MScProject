@@ -109,6 +109,7 @@ namespace Renderer
 			std::vector<int> _opaqueMeshes{};
 			std::vector<int> _transparentMeshes{};
 			std::vector<int> _transparentMeshesSortedClosestToLight{};
+			std::vector<int> _transparentMeshesSortedClosestToLightInverse{};
 			std::vector<int> _transparentMeshesSortedFarthestFromCamera{};
 			tinygltf::Model* _model = nullptr;
 
@@ -147,10 +148,11 @@ namespace Renderer
 			void CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, bool materialOverriden = false);
 			void CmdDrawTransparentCameraBackToFront(Environment* environment, Pipeline* pipeline, size_t start, size_t end, bool materialOverriden = false);
 	
-			inline uint32_t MeshCount() { return _meshes.size(); }
-			inline uint32_t OpaqueMeshCount() { return _opaqueMeshes.size(); }
-			inline uint32_t TransparentMeshCount() { return _transparentMeshes.size(); }
+			inline uint32_t MeshCount() { return static_cast<uint32_t>(_meshes.size()); }
+			inline uint32_t OpaqueMeshCount() { return static_cast<uint32_t>(_opaqueMeshes.size()); }
+			inline uint32_t TransparentMeshCount() { return static_cast<uint32_t>(_transparentMeshes.size()); }
 			inline const std::vector<int>& TransparentMeshesSortedClosestToLight() { return _transparentMeshesSortedClosestToLight; }
 			inline const std::vector<int>& TransparentMeshesSortedFarthestFromCamera() { return _transparentMeshesSortedFarthestFromCamera; }
+			inline const uint32_t ReverseLookupTransparentMeshSortedClosestToLight(int i) { return _transparentMeshesSortedClosestToLightInverse[i]; }
 	};
 }

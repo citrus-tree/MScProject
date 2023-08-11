@@ -47,6 +47,7 @@ namespace labutils
 		{
 			bool samplerAnisotropy = false;
 			float maxSamplerAnisotropy = 0.0f;
+			uint32_t timestampPeriod = 1;
 		} features;
 	};
 

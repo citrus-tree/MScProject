@@ -207,13 +207,5 @@
     <None Include="..\res\shaders\CSSM_secondShadowPass.frag">
       <Filter>res\shaders</Filter>
     </None>
-    <None Include="..\res\shaders\DPTS_geometryPass.frag">
-      <Filter>res\shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\res\shaders\DPTS_shadowPass.frag">
-      <Filter>res\shaders</Filter>
-    </Text>
   </ItemGroup>
 </Project>

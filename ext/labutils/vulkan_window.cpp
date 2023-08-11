@@ -235,6 +235,7 @@ namespace labutils
 			vkGetPhysicalDeviceFeatures(ret.physicalDevice, &feats);
 			ret.features.samplerAnisotropy = (feats.samplerAnisotropy == VK_TRUE);
 			ret.features.maxSamplerAnisotropy = props.limits.maxSamplerAnisotropy;
+			ret.features.timestampPeriod = props.limits.timestampPeriod;
 
 			std::fprintf(stderr, " * Optional features:\n");
 			std::fprintf(stderr, "     -> SamplerAnisotropy: %s\n", (ret.features.samplerAnisotropy) ? "YES" : "NO");

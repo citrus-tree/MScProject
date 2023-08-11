@@ -451,6 +451,17 @@ namespace Renderer
 				}
 			}
 		}
+
+		if (sortLight)
+		{
+			_transparentMeshesSortedClosestToLightInverse.clear();
+
+			_transparentMeshesSortedClosestToLightInverse.resize(
+				_transparentMeshesSortedClosestToLight.size());
+
+			for (size_t i = 0; i < _transparentMeshesSortedClosestToLight.size(); i++)
+				_transparentMeshesSortedClosestToLightInverse[_transparentMeshesSortedClosestToLight[i]] = i;
+		}
 	}
 
 	void Model::CmdDrawTransparentLightFrontToBack(Environment* environment, Pipeline* pipeline, bool materialOverriden)

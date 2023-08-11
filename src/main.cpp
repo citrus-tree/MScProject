@@ -1,6 +1,8 @@
 
 /* c++ */
 #include <algorithm>
+#include <iostream>
+#include <fstream>
 
 /* glm */
 #if !defined(GLM_FORCE_RADIANS)
@@ -45,9 +47,39 @@ namespace lut = labutils;
 #define CSSM 0
 #define CTS 1
 
+#define TIMING 0
+
 const float FOV = 90.0f / 180.0f * 3.1415f;
-const float FarClipDist = 32.0f;
+#if TIMING
+	const float FarClipDist = 512.0f;
+#else
+	const float FarClipDist = 36.0f;
+#endif
 const float ShadowBufferDistance = 100.0f;
+
+
+#define TECHNAME "undefined"
+#if VANILLA
+	#define TECHNAME "vanilla"
+#endif
+#if TRANSLUCENT_SHADOWS
+	#define TECHNAME "translucent_shadows"
+#endif
+#if SSM
+	#define TECHNAME "ssm"
+#endif
+#if CSSM
+	#define TECHNAME "cssm"
+#endif
+#if CTS
+	#define TECHNAME "cts"
+#endif
+
+#if TIMING 
+	#define TIMESTAMP(X) vkCmdWriteTimestamp(*env.CurrentCmdBuffer(), VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool, X);
+#else
+	#define TIMESTAMP(X)
+#endif
 
 int main(int argc, char** argv)
 {
@@ -65,7 +97,7 @@ int main(int argc, char** argv)
 	simpleOpaqueFeatures.depthTest = Renderer::DepthTest::ENABLED;
 	simpleOpaqueFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_GEOMETRY;
 	Renderer::RenderPass simpleOpaquePass(env.WindowPtr(), simpleOpaqueFeatures);
-
+	
 	Renderer::RenderPassFeatures presentFeatures;
 	presentFeatures.colourPass = Renderer::ColourPass::ENABLED;
 	presentFeatures.depthTest = Renderer::DepthTest::DISABLED;
@@ -119,7 +151,7 @@ int main(int argc, char** argv)
 	// camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
 	// camera.FrameUpdate(0.01f);
 
-	//*
+	/*
 	camera.SetPosition(glm::vec3(10.090, -7.994, 5.043));
 	camera.SetOrientation(glm::vec2(274.000, 1083.000));
 	camera.FrameUpdate(0.01f);//*/
@@ -133,6 +165,27 @@ int main(int argc, char** argv)
 	camera.SetPosition(glm::vec3(4.869, -2.837, 0.344));
 	camera.SetOrientation(glm::vec2(368.000, 907.000));
 	camera.FrameUpdate(0.01f);//*/
+
+	/*
+	camera.SetPosition(glm::vec3(10.910, -10.652, 6.880));
+	camera.SetOrientation(glm::vec2(344.000, 1049.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	/*
+	camera.SetPosition(glm::vec3(2.836, -4.911, -5.145));
+	camera.SetOrientation(glm::vec2(295.000, 99.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	//*
+	camera.SetPosition(glm::vec3(5.353, -6.771, -4.151));
+	camera.SetOrientation(glm::vec2(295.000, 99.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	#if TIMING
+		camera.SetPosition(glm::vec3(107.285, -85.192, 62.206));
+		camera.SetOrientation(glm::vec2(191.000, 1044.000));
+		camera.FrameUpdate(0.01f);
+	#endif
 
 	/* camera data uniform */
 	Renderer::DescriptorSetLayout cameraUniformLayout(&env, { true, true, false }, Renderer::DescriptorSetType::UNIFORM_BUFFER);
@@ -213,7 +266,7 @@ int main(int argc, char** argv)
 	Renderer::DescriptorSetLayout singleTextureLayout(&env, singleTextureLayoutData);
 
 	/* load model */
-	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler);
+	Renderer::Model model(&env, "../res/models/teapot scene three.glb", &simpleLayout, &defaultSampler);
 	model.SortTransparentGeometry(-lights.sunLight.direction * 9999.9f, camera.Position());
 
 	/* Pipelines and Dependencies */
@@ -388,6 +441,7 @@ int main(int argc, char** argv)
 		CSSM_shadowPipelineFeatures.depthWrite = Renderer::DepthWrite::ENABLED;
 		Renderer::Pipeline CSSM_shadowOpaquePipeline(&env, CSSM_shadowPipelineFeatures, &CSSM_shadowPass, CSSM_shadowLayouts);
 
+		CSSM_shadowPipelineFeatures.alphaBlend = Renderer::AlphaBlend::ENABLED;
 		CSSM_shadowPipelineFeatures.specialMode = Renderer::SpecialMode::CSSM_COLORED_STOCHASTIC_SHADOW_MAP_2;
 		CSSM_shadowPipelineFeatures.depthWrite = Renderer::DepthWrite::DISABLED;
 		CSSM_shadowPipelineFeatures.blendMode = Renderer::BlendMode::MIN_ONE_ONE;
@@ -411,13 +465,57 @@ int main(int argc, char** argv)
 		Renderer::Pipeline CTS_transparentGeometryPipeline(&env, CTS_transparentGeometryFeatures, &CTS_compositingPass, TS_simpleLayouts);
 	#endif
 
+	#if TIMING
+		/* Create timing resources */
+		uint64_t timestampResults[8]{};
+		/*  [0]: frame start
+			[1]: frame end
+			[2]: shadow mapping start 
+			[3]: shadow mapping end
+			[4]: geometry draw start
+			[5]: geometry draw end 
+			[6]: combination draw begin
+			[7]: combination draw end */
+		uint32_t lastmeshLimit = 0;
+
+		VkQueryPoolCreateInfo poolInfo{};
+		poolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+		poolInfo.queryCount = 8;
+		poolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+
+		VkQueryPool queryPool{};
+		if (auto res = vkCreateQueryPool(env.Window().device, &poolInfo, nullptr, &queryPool); res != VK_SUCCESS)
+		{
+			lut::Error("VK: vkCreateQueryPool() failed to create a query pool. err: %s",
+				lut::to_string(res).c_str());
+		}
+		vkResetQueryPool(env.Window().device, queryPool, 0, 8);
+
+		/* Create the csv file to write stats to */
+		std::ofstream statsFile("../output/" TECHNAME "_stats.csv");
+		statsFile << "transparent mesh count, total frame render time, shadow mapping time, geometry draw time, combination draw time\n";
+	#endif
+
 	/* Main loop */
 	double time = glfwGetTime();
 	bool firstFrame = true;
 	bool printOutLastFrame = false;
 	uint32_t frameNumber = 0;
-	while (glfwWindowShouldClose(env.Window().window) == false)
+	bool overrideClose = false;
+	while (glfwWindowShouldClose(env.Window().window) == false && overrideClose == false)
 	{
+		uint32_t meshLimit = model.TransparentMeshCount();
+		#if TIMING
+			/* number of stress test meshes to render */
+			lastmeshLimit = meshLimit;
+			#if not CTS
+				meshLimit = std::min(model.TransparentMeshCount(), frameNumber);
+			#else
+				// meshLimit = std::min(model.TransparentMeshCount(), frameNumber * 20);
+				meshLimit = std::min(30U, frameNumber / 5);
+			#endif
+		#endif
+
 		/* Window polling */
 		glfwPollEvents();
 
@@ -449,7 +547,6 @@ int main(int argc, char** argv)
 				TS_geometryPipeline.Repair(&env);
 				TS_transparentGeometryPipeline.Repair(&env);
 			#endif
-
 
 			#if CTS
 				CTS_transparentGeometryPipeline.Repair(&env);
@@ -483,6 +580,12 @@ int main(int argc, char** argv)
 		/* Prepare to queue commands */
 		env.BeginFrameCommands();
 
+		#if TIMING
+			vkResetQueryPool(env.Window().device, queryPool, 0, 8);
+		#endif
+
+		TIMESTAMP(0) /* frame start */
+
 		/* Update the camera and lighting data buffers */
 		Renderer::CmdUpdateBuffer(&env, &cameraUBO, 0, sizeof(Renderer::Uniforms::CameraData), camera.GetUniformDataPtr());
 		Renderer::CmdUpdateBuffer(&env, &lightingUBO, 0, sizeof(Renderer::Uniforms::LightData), &lights);
@@ -513,6 +616,7 @@ int main(int argc, char** argv)
 			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
 		#endif
 
+		TIMESTAMP(2) /* shadow mapping start */
 
 		#if VANILLA or TRANSLUCENT_SHADOWS or SSM or CTS
 			/* Begin shadow map pass */
@@ -532,7 +636,7 @@ int main(int argc, char** argv)
 					shadowMapProjSet.CmdBind(&env, &SSM_shadowPipeline, 0);
 					noiseTextureSet.CmdBind(&env, &SSM_shadowPipeline, 2);
 					model.CmdDrawOpaque(&env, &SSM_shadowPipeline);
-					model.CmdDrawTransparent(&env, &SSM_shadowPipeline);
+					model.CmdDrawTransparent(&env, &SSM_shadowPipeline, 0, meshLimit);
 				#endif
 			}
 
@@ -559,7 +663,7 @@ int main(int argc, char** argv)
 				CSSM_shadowTransparentPipeline.CmdBind(&env);
 				shadowMapProjSet.CmdBind(&env, &CSSM_shadowTransparentPipeline, 0);
 				noiseTextureSet.CmdBind(&env, &CSSM_shadowTransparentPipeline, 2);
-				model.CmdDrawTransparent(&env, &CSSM_shadowTransparentPipeline);
+				model.CmdDrawTransparent(&env, &CSSM_shadowTransparentPipeline, 0, meshLimit);
 			}
 
 			/* End render pass */
@@ -584,7 +688,7 @@ int main(int argc, char** argv)
 					this pass records the transparent surface closest to the camera */
 				shadowPipeline.CmdBind(&env);
 				shadowMapProjSet.CmdBind(&env, &shadowPipeline, 0);
-				model.CmdDrawTransparentLightFrontToBack_DepthOnly(&env, &shadowPipeline, true);
+				model.CmdDrawTransparentLightFrontToBack_DepthOnly(&env, &shadowPipeline, 0, meshLimit, true);
 			}
 
 			/* TRANSLUCENT SHADOWS: End render pass */
@@ -602,7 +706,7 @@ int main(int argc, char** argv)
 					so the final translucent shadow colour can be determined. */
 				TS_transparentPipeline.CmdBind(&env);
 				shadowMapProjSet.CmdBind(&env, &TS_transparentPipeline, 0);
-				model.CmdDrawTransparentLightFrontToBack(&env, &TS_transparentPipeline);
+				model.CmdDrawTransparentLightFrontToBack(&env, &TS_transparentPipeline, 0, meshLimit);
 			}
 
 			/* TRANSLUCENT SHADOWS: End render pass */
@@ -614,6 +718,9 @@ int main(int argc, char** argv)
 			/* Set the opaque shadow map texture for reading */
 			Renderer::CmdTransitionForRead(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 		#endif
+
+		TIMESTAMP(3) /* shadow mapping end */
+		TIMESTAMP(4) /* geometry render start */
 
 		/* Begin geometry pass */
 		env.BeginRenderPass(&simpleOpaquePass); /* rendering to intermediate 0 */
@@ -634,7 +741,7 @@ int main(int argc, char** argv)
 				cameraSet.CmdBind(&env, &transparentPipeline, 0);
 				lightingSet.CmdBind(&env, &transparentPipeline, 2);
 				shadowMapSet.CmdBind(&env, &transparentPipeline, 3);
-				model.CmdDrawTransparentCameraBackToFront(&env, &transparentPipeline);
+				model.CmdDrawTransparentCameraBackToFront(&env, &transparentPipeline, 0, meshLimit);
 			#endif
 
 			#if TRANSLUCENT_SHADOWS or CTS
@@ -651,7 +758,7 @@ int main(int argc, char** argv)
 					cameraSet.CmdBind(&env, &TS_transparentGeometryPipeline, 0);
 					lightingSet.CmdBind(&env, &TS_transparentGeometryPipeline, 2);
 					TS_shadowMapSet.CmdBind(&env, &TS_transparentGeometryPipeline, 3);
-					model.CmdDrawTransparentCameraBackToFront(&env, &TS_transparentGeometryPipeline);
+					model.CmdDrawTransparentCameraBackToFront(&env, &TS_transparentGeometryPipeline, 0, meshLimit);
 				#endif
 			#endif
 
@@ -668,7 +775,7 @@ int main(int argc, char** argv)
 				cameraSet.CmdBind(&env, &SSM_transparentPipeline, 0);
 				lightingSet.CmdBind(&env, &SSM_transparentPipeline, 2);
 				shadowMapSet.CmdBind(&env, &SSM_transparentPipeline, 3);
-				model.CmdDrawTransparentCameraBackToFront(&env, &SSM_transparentPipeline);
+				model.CmdDrawTransparentCameraBackToFront(&env, &SSM_transparentPipeline, 0, meshLimit);
 			#endif
 
 			#if CSSM
@@ -684,7 +791,7 @@ int main(int argc, char** argv)
 				cameraSet.CmdBind(&env, &CSSM_transparentPipeline, 0);
 				lightingSet.CmdBind(&env, &CSSM_transparentPipeline, 2);
 				CSSM_shadowMapSet.CmdBind(&env, &CSSM_transparentPipeline, 3);
-				model.CmdDrawTransparentCameraBackToFront(&env, &CSSM_transparentPipeline);
+				model.CmdDrawTransparentCameraBackToFront(&env, &CSSM_transparentPipeline, 0, meshLimit);
 			#endif
 		}
 
@@ -708,15 +815,12 @@ int main(int argc, char** argv)
 			env.EndRenderPass();
 
 		#else
+			TIMESTAMP(6) /* composited drawing start */
 			/* Render the depth peeled layers */
-			for (uint32_t i = 0; i < model.TransparentMeshCount(); i++)
+			for (uint32_t i = 0; i < meshLimit; i++)
 			{
 				uint32_t currentMesh = model.TransparentMeshesSortedFarthestFromCamera()[i];
-				uint32_t lightFarIndex = std::find(
-					model.TransparentMeshesSortedClosestToLight().begin(),
-					model.TransparentMeshesSortedClosestToLight().end(),
-					static_cast<int>(currentMesh)) -
-					model.TransparentMeshesSortedClosestToLight().begin();
+				uint32_t lightFarIndex = model.ReverseLookupTransparentMeshSortedClosestToLight(i);
 
 				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
 				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
@@ -754,6 +858,8 @@ int main(int argc, char** argv)
 				env.EndRenderPass();
 			}
 
+			TIMESTAMP(7) /* composited drawing end */
+
 			/* Swap the intermediate images */
 			env.CmdSwapIntermediates(); /* 0 -> 1 */
 
@@ -768,7 +874,10 @@ int main(int argc, char** argv)
 
 			/* End render pass */
 			env.EndRenderPass();
-	#endif
+		#endif
+
+		TIMESTAMP(5)
+		TIMESTAMP(1)
 
 		/* Submitted queued commands */
 		env.EndFrameCommands();
@@ -776,9 +885,59 @@ int main(int argc, char** argv)
 		/* Present the frame */
 		env.Present();
 
+		#if TIMING
+		#if not CTS
+			vkGetQueryPoolResults(env.Window().device, queryPool, 0, 6, sizeof(uint64_t) * 6, timestampResults, sizeof(uint64_t),
+				VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+
+			double frameTime = static_cast<double>(timestampResults[1] - timestampResults[0]) * env.Window().features.timestampPeriod;
+			double shadowMapTime = static_cast<double>(timestampResults[3] - timestampResults[2]) * env.Window().features.timestampPeriod;
+			double geometryTime = static_cast<double>(timestampResults[5] - timestampResults[4]) * env.Window().features.timestampPeriod;
+
+			statsFile <<
+				std::to_string(meshLimit) << ", " <<
+				std::to_string(frameTime / 1000000.0) << ", " <<
+				std::to_string(shadowMapTime / 1000000.0) << ", " <<
+				std::to_string(geometryTime / 1000000.0) << ", " <<
+				std::to_string((shadowMapTime + geometryTime) / 1000000.0 ) << "\n";
+
+			if (frameNumber % 10 == 0)
+				printf("Percent complete: %.2f\n", 100.0f * (float)meshLimit / (float)model.TransparentMeshCount());
+
+		#else
+			vkGetQueryPoolResults(env.Window().device, queryPool, 0, 8, sizeof(uint64_t) * 8, timestampResults, sizeof(uint64_t),
+				VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+
+			double frameTime = static_cast<double>(timestampResults[1] - timestampResults[0]) * env.Window().features.timestampPeriod;
+			double shadowMapTime = static_cast<double>(timestampResults[3] - timestampResults[2]) * env.Window().features.timestampPeriod;
+			double geometryTime = static_cast<double>(timestampResults[5] - timestampResults[4]) * env.Window().features.timestampPeriod;
+			double compositeTime = static_cast<double>(timestampResults[7] - timestampResults[6]) * env.Window().features.timestampPeriod;
+
+			statsFile <<
+				std::to_string(meshLimit) << ", " <<
+				std::to_string(frameTime / 1000000.0) << ", " <<
+				std::to_string(shadowMapTime / 1000000.0) << ", " <<
+				std::to_string(geometryTime / 1000000.0) << ", " <<
+				std::to_string((compositeTime + shadowMapTime + geometryTime) / 1000000.0) << "\n";
+
+				printf("Percent complete: %.2f\n", 100.0f * (float)meshLimit / (float)model.TransparentMeshCount());
+		#endif
+
+		std::flush(statsFile);
+
+		if (lastmeshLimit == meshLimit)
+			overrideClose = true;
+		#endif
+
 		/* Increment the frame count */
 		frameNumber++;
 	}
+
+	#if TIMING
+		statsFile.close();
+		/* Destroy the querying resources */
+		vkDestroyQueryPool(env.Window().device, queryPool, nullptr);
+	#endif
 
 	/* Wait for the GPU to finishing doing what it's doing. */
 	vkDeviceWaitIdle(env.Window().device);

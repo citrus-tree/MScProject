@@ -4,7 +4,7 @@ float eps = 0.0001;
 float pi = 3.141592;
 
 float normal_bias = 0.08;
-float pcf_radius = 6;
+float pcf_radius = 4;
 
 /* Here be data */
 
