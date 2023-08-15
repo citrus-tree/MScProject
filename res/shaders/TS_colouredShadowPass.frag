@@ -30,7 +30,9 @@ layout(set = 1, binding = 2) uniform MaterialData
 void main()
 {
 	vec4 texSample = texture(uColourTex, iUV);
-	vec3 lightProb = 0.5 + texSample.a * texSample.rgb * 0.5;
+	vec3 lightProb = 0.5 + (1.0 - texSample.a) * texSample.rgb * 0.5;
+	// vec3 lightProb = (texSample.rgb + (1.0 - texSample.a) * texSample.rgb) * 0.5;
+	// vec3 lightProb = texSample.rgb;
 
 	oColour = vec4(lightProb, texSample.a);
 }

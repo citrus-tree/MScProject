@@ -53,25 +53,29 @@ const float FOV = 90.0f / 180.0f * 3.1415f;
 #if TIMING
 	const float FarClipDist = 512.0f;
 #else
-	const float FarClipDist = 36.0f;
+	const float FarClipDist = 32.0f;
 #endif
-const float ShadowBufferDistance = 100.0f;
-
+const float ShadowBufferDistance = 10.0f;
 
 #define TECHNAME "undefined"
 #if VANILLA
+	#undef TECHNAME
 	#define TECHNAME "vanilla"
 #endif
 #if TRANSLUCENT_SHADOWS
+	#undef TECHNAME
 	#define TECHNAME "translucent_shadows"
 #endif
 #if SSM
+	#undef TECHNAME
 	#define TECHNAME "ssm"
 #endif
 #if CSSM
+	#undef TECHNAME
 	#define TECHNAME "cssm"
 #endif
 #if CTS
+	#undef TECHNAME
 	#define TECHNAME "cts"
 #endif
 
@@ -125,6 +129,7 @@ int main(int argc, char** argv)
 		CTS_compositingFeatures.depthTest = Renderer::DepthTest::ENABLED;
 		CTS_compositingFeatures.renderTarget = Renderer::RenderTarget::TEXTURE_GEOMETRY;
 		CTS_compositingFeatures.clearColour = Renderer::ClearColour::DISABLED;
+		CTS_compositingFeatures.clearDepth = Renderer::ClearDepth::DISABLED;
 		Renderer::RenderPass CTS_compositingPass(env.WindowPtr(), CTS_compositingFeatures);
 	#endif
 
@@ -141,7 +146,7 @@ int main(int argc, char** argv)
 	env.InitialiseSwapChain({ &simpleOpaquePass, &presentPass });
 
 		/* samplers */
-	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window());
+	lut::Sampler defaultSampler = Renderer::CreateDefaultSampler(env.Window(), VK_FILTER_NEAREST, VK_FILTER_NEAREST);
 	lut::Sampler pointSampler = Renderer::CreateDefaultSampler(env.Window(), VK_FILTER_NEAREST, VK_FILTER_NEAREST);
 	lut::Sampler shadowSampler = Renderer::CreateDefaultShadowSampler(env.Window());
 
@@ -176,9 +181,19 @@ int main(int argc, char** argv)
 	camera.SetOrientation(glm::vec2(295.000, 99.000));
 	camera.FrameUpdate(0.01f);//*/
 
-	//*
+	/*
 	camera.SetPosition(glm::vec3(5.353, -6.771, -4.151));
 	camera.SetOrientation(glm::vec2(295.000, 99.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	/*
+	camera.SetPosition(glm::vec3(-19.657, -14.666, 2.381));
+	camera.SetOrientation(glm::vec2(423.000, -786.000));
+	camera.FrameUpdate(0.01f);//*/
+
+	//*
+	camera.SetPosition(glm::vec3(7.859, -7.705, -7.832));
+	camera.SetOrientation(glm::vec2(222.000, 238.000));
 	camera.FrameUpdate(0.01f);//*/
 
 	#if TIMING
@@ -198,7 +213,7 @@ int main(int argc, char** argv)
 	Renderer::Uniforms::LightData lights;
 	lights.sunLight.direction = glm::normalize(glm::vec4(1.0f, -1.0f, 0.0f, 0.0f));
 	// lights.sunLight.direction = glm::normalize(glm::vec4(1.0f, -0.5f, 0.0f, 0.0f));
-	lights.sunLight.colour = glm::normalize(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	lights.sunLight.colour = glm::normalize(glm::vec4(2.0f, 2.0f, 2.0f, 1.0f));
 
 	/* lighting uniform */
 	Renderer::DescriptorSetLayout lightingUniformLayout(&env, Renderer::ShaderStageConstants::FRAGMENT_STAGE, Renderer::DescriptorSetType::UNIFORM_BUFFER);
@@ -820,7 +835,7 @@ int main(int argc, char** argv)
 			for (uint32_t i = 0; i < meshLimit; i++)
 			{
 				uint32_t currentMesh = model.TransparentMeshesSortedFarthestFromCamera()[i];
-				uint32_t lightFarIndex = model.ReverseLookupTransparentMeshSortedClosestToLight(i);
+				uint32_t lightFarIndex = model.ReverseLookupTransparentMeshSortedClosestToLight(currentMesh);
 
 				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
 				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
