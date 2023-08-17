@@ -526,8 +526,8 @@ int main(int argc, char** argv)
 			#if not CTS
 				meshLimit = std::min(model.TransparentMeshCount(), frameNumber);
 			#else
-				// meshLimit = std::min(model.TransparentMeshCount(), frameNumber * 20);
-				meshLimit = std::min(30U, frameNumber / 5);
+				meshLimit = std::min(model.TransparentMeshCount(), frameNumber * 20);
+				// meshLimit = std::min(30U, frameNumber / 5);
 			#endif
 		#endif
 
@@ -810,6 +810,8 @@ int main(int argc, char** argv)
 			#endif
 		}
 
+		TIMESTAMP(5)
+
 		/* End render pass */
 		env.EndRenderPass();
 
@@ -831,7 +833,6 @@ int main(int argc, char** argv)
 
 		#else
 			TIMESTAMP(6) /* composited drawing start */
-			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 
 			/* Render the depth peeled layers */
 			for (uint32_t i = 0; i < meshLimit; i++)
@@ -839,6 +840,7 @@ int main(int argc, char** argv)
 				uint32_t currentMesh = model.TransparentMeshesSortedFarthestFromCamera()[i];
 				uint32_t lightFarIndex = model.ReverseLookupTransparentMeshSortedClosestToLight(currentMesh);
 
+				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
 				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentDepthMapIndex))[0], true);
 				Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(TS_translucentShadowMapIndex))[0], false);
 
@@ -893,7 +895,6 @@ int main(int argc, char** argv)
 			env.EndRenderPass();
 		#endif
 
-		TIMESTAMP(5)
 		TIMESTAMP(1)
 
 		/* Submitted queued commands */
