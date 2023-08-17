@@ -53,7 +53,7 @@ namespace Renderer
 			attachments[curAttachInd].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[curAttachInd].loadOp = (_initData.clearColour == ClearColour::ENABLED) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 			attachments[curAttachInd].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			attachments[curAttachInd].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			attachments[curAttachInd].initialLayout = (_initData.clearColour == ClearColour::ENABLED) ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			if (_initData.renderTarget == RenderTarget::PRESENT)
 				attachments[curAttachInd].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 			else if (_initData.renderTarget == RenderTarget::TEXTURE_GEOMETRY ||
@@ -72,7 +72,7 @@ namespace Renderer
 			attachments[curAttachInd].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[curAttachInd].loadOp = (_initData.clearDepth == ClearDepth::ENABLED) ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 			attachments[curAttachInd].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-			attachments[curAttachInd].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			attachments[curAttachInd].initialLayout = (_initData.clearDepth == ClearDepth::ENABLED) ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 			attachments[curAttachInd].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 			depthInd = curAttachInd;

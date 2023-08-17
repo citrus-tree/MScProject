@@ -44,8 +44,8 @@ namespace lut = labutils;
 #define VANILLA 0
 #define TRANSLUCENT_SHADOWS 0
 #define SSM 0
-#define CSSM 0
-#define CTS 1
+#define CSSM 1
+#define CTS 0
 
 #define TIMING 0
 
@@ -53,7 +53,7 @@ const float FOV = 90.0f / 180.0f * 3.1415f;
 #if TIMING
 	const float FarClipDist = 512.0f;
 #else
-	const float FarClipDist = 32.0f;
+	const float FarClipDist = 48.0f;
 #endif
 const float ShadowBufferDistance = 10.0f;
 
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
 	// camera.SetPosition(glm::vec3(0.0f, -1.0f, -15.0f));
 	// camera.FrameUpdate(0.01f);
 
-	/*
+	//*
 	camera.SetPosition(glm::vec3(10.090, -7.994, 5.043));
 	camera.SetOrientation(glm::vec2(274.000, 1083.000));
 	camera.FrameUpdate(0.01f);//*/
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 	camera.SetOrientation(glm::vec2(423.000, -786.000));
 	camera.FrameUpdate(0.01f);//*/
 
-	//*
+	/*
 	camera.SetPosition(glm::vec3(7.859, -7.705, -7.832));
 	camera.SetOrientation(glm::vec2(222.000, 238.000));
 	camera.FrameUpdate(0.01f);//*/
@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 	Renderer::DescriptorSetLayout singleTextureLayout(&env, singleTextureLayoutData);
 
 	/* load model */
-	Renderer::Model model(&env, "../res/models/teapot scene three.glb", &simpleLayout, &defaultSampler);
+	Renderer::Model model(&env, "../res/models/teapot scene.glb", &simpleLayout, &defaultSampler); /* scene selection */
 	model.SortTransparentGeometry(-lights.sunLight.direction * 9999.9f, camera.Position());
 
 	/* Pipelines and Dependencies */
@@ -831,6 +831,8 @@ int main(int argc, char** argv)
 
 		#else
 			TIMESTAMP(6) /* composited drawing start */
+			Renderer::CmdTransitionForWrite(&env, &(*env.GetSideBufferImage(shadowMapIndex))[0], true);
+
 			/* Render the depth peeled layers */
 			for (uint32_t i = 0; i < meshLimit; i++)
 			{
