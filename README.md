@@ -6,7 +6,7 @@ The full report is available as a <a href="https://github.com/citrus-tree/MScPro
 
 Translucent Shadows (1) | Coloured Stochastic Shadow Mapping (2) | Composited Translucent Shadows
 :-:|:-:|:-:
-<img src="https://github.com/citrus-tree/MScProject/blob/dev/ts-squares.png" alt="Example of Translucent Shadows (1)" width="500"/> | <img src="https://github.com/citrus-tree/MScProject/blob/dev/ts-squares.png" alt="Example of Coloured Stochastic Shadow Mapping (2)" width="500"/> | <img src="https://github.com/citrus-tree/MScProject/blob/dev/ts-squares.png" alt="Example of Composited Translucent Shadows" width="500"/>
+<img src="https://github.com/citrus-tree/MScProject/blob/dev/ts-squares.png" alt="Example of Translucent Shadows (1)" width="500"/> | <img src="https://github.com/citrus-tree/MScProject/blob/dev/cssm2-squares.png" alt="Example of Coloured Stochastic Shadow Mapping (2)" width="500"/> | <img src="https://github.com/citrus-tree/MScProject/blob/dev/cts-squares.png" alt="Example of Composited Translucent Shadows" width="500"/>
 
 The above images compares the two existing techniques examined with the newly introduced technique, composited translucent shadows.
 
