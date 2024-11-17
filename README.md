@@ -1,4 +1,4 @@
-# MScProject
+# Composited Translucent Shadows
 
 This project, submitted as part of my MSc, examines two existing techniques for the real-time rendering of coloured shadow casters using shadow mapping techniques (no ray-tracing), as well as introduces a new technique which address the weaknesses of both existing techniques.
 
